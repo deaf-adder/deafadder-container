@@ -1,0 +1,6 @@
+[run]
+omit = [".*", "*/site-packages/*", "tests/*"]
+source = deafadder_container
+
+[report]
+fail_under = 100

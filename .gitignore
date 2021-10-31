@@ -1,3 +1,6 @@
 .venv/
 .idea/
 *.iml
+.pytest_cache/
+.coverage
+__pycache__/
