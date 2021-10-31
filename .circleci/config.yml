@@ -55,22 +55,22 @@ commands:
 
 
 jobs:
-  test-3.7:
+  test-3-7:
     executor: poetry_python_3-7
     steps:
       - checkout
       - test
-  test-3.8:
+  test-3-8:
     executor: poetry_python_3-8
     steps:
       - checkout
       - test
-  test-3.9:
+  test-3-9:
     executor: poetry_python_3-9
     steps:
       - checkout
       - test
-  test-3.10:
+  test-3-10:
     executor: poetry_python_3-10
     steps:
       - checkout
@@ -79,16 +79,16 @@ jobs:
 workflows:
   "Develop pipeline":
     jobs:
-      - test-3.7:
+      - test-3-7:
           <<: *docker_context
           <<: *develop_filter
-      - test-3.8:
+      - test-3-8:
           <<: *docker_context
           <<: *develop_filter
-      - test-3.9:
+      - test-3-9:
           <<: *docker_context
           <<: *develop_filter
-      - test-3.10:
+      - test-3-10:
           <<: *docker_context
           <<: *develop_filter
 
