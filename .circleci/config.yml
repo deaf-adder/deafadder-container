@@ -1,0 +1,94 @@
+version: 2.1
+
+executors:
+  poetry_python_3.7:
+    docker:
+      - image: leddzip/python-poetry:py3.7-po1.1.11
+        auth:
+          username: $MY_CIRCLECI_DOCKERHUB_USERNAME
+          password: $MY_CIRCLECI_DOCKERHUB_PASSWORD
+  poetry_python_3.8:
+    docker:
+      - image: leddzip/python-poetry:py3.8-po1.1.11
+        auth:
+          username: $MY_CIRCLECI_DOCKERHUB_USERNAME
+          password: $MY_CIRCLECI_DOCKERHUB_PASSWORD
+  poetry_python_3.9:
+    docker:
+      - image: leddzip/python-poetry:py3.9-po1.1.11
+        auth:
+          username: $MY_CIRCLECI_DOCKERHUB_USERNAME
+          password: $MY_CIRCLECI_DOCKERHUB_PASSWORD
+  poetry_python_3.10:
+    docker:
+      - image: leddzip/python-poetry:py3.10-po1.1.11
+        auth:
+          username: $MY_CIRCLECI_DOCKERHUB_USERNAME
+          password: $MY_CIRCLECI_DOCKERHUB_PASSWORD
+
+
+docker_context: &docker_context
+  context:
+    - Leddzip Dockerhub
+
+develop_filter: &develop_filter
+  filters:
+    branches:
+      only: develop
+
+maste_filter: &master_filter
+  filters:
+    branches:
+      only: develop
+
+
+
+commands:
+  test:
+    steps:
+      - run: |
+          poetry install
+          poetry run coverage run -m pytest
+          poetry run coverage report
+
+
+
+
+jobs:
+  test-3.7:
+    executor: poetry_python_3.7
+    steps:
+      - checkout
+      - test
+  test-3.8:
+    executor: poetry_python_3.8
+    steps:
+      - checkout
+      - test
+  test-3.9:
+    executor: poetry_python_3.9
+    steps:
+      - checkout
+      - test
+  test-3.10:
+    executor: poetry_python_3.10
+    steps:
+      - checkout
+      - test
+
+workflows:
+  "Develop pipeline":
+    jobs:
+      - test-3.7:
+          <<: *docker_context
+          <<: *develop_filter
+      - test-3.8:
+          <<: *docker_context
+          <<: *develop_filter
+      - test-3.9:
+          <<: *docker_context
+          <<: *develop_filter
+      - test-3.10:
+          <<: *docker_context
+          <<: *develop_filter
+
