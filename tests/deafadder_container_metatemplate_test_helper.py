@@ -55,5 +55,3 @@ class _InheritedComponentWithoutMetaclass(_FirstDummyClassForTest):
     def increment(self):
         self.counter = self.counter + 1
         self.second_counter = self.second_counter + 1
-
-

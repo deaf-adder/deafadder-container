@@ -13,7 +13,11 @@ coverage:
 	poetry run coverage report
 
 
-.ONEHSELL:
-SHELL = /bin/bash
 check-version:
 	bash ./build-scripts/check_version.sh
+
+
+lint:
+	poetry run flake8
+
+
