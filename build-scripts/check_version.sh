@@ -17,10 +17,11 @@ fi
 
 
 
-if [[ "$ini_version" =~ [0-9]+\.[0-9]+\.[0-9]+ ]]
+if [[ "$init_version" =~ [0-9]*\.[0-9]*\.[0-9]* ]]
 then
   echo "version has a valid format"
 else
   >&2 echo "version has wrong format"
+  >&2 echo "actual version: $init_version"
   exit 2
 fi
