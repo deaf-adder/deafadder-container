@@ -2,16 +2,17 @@ import pytest
 
 from deafadder_container.ContainerException import InstanceNotFound
 
-from .deafadder_container_metatemplate_test_helper import _FirstDummyClassForTest, _SecondDummyClassForTest
+from .deafadder_container_metatemplate_test_helper import _FirstDummyClassForTest, \
+    _SecondDummyClassForTest, _InheritedComponentWithMetaclass, _InheritedComponentWithoutMetaclass
 
 
 def test_delete_instance_success_when_instance_exist():
-    instance = _FirstDummyClassForTest()
+    _ = _FirstDummyClassForTest()
     _FirstDummyClassForTest.delete()
 
 
 def test_delete_named_instance_success_when_instance_exist():
-    instance = _FirstDummyClassForTest(instance_name="non default instance")
+    _ = _FirstDummyClassForTest(instance_name="non default instance")
     _FirstDummyClassForTest.delete("non default instance")
 
 
@@ -25,7 +26,7 @@ def test_failure_delete_when_no_instance_exist():
 
 def test_get_instance_fails_when_no_instance_exist():
     with pytest.raises(InstanceNotFound) as raised_exception:
-        instance = _FirstDummyClassForTest.get()
+        _ = _FirstDummyClassForTest.get()
     assert type(raised_exception.value) is InstanceNotFound
     assert str(raised_exception.value) == "Unable to find an instance for " \
                                           "'<class 'deafadder_container.MetaTemplate.Component'>' " \
@@ -61,7 +62,7 @@ def test_get_instance_success_when_instance_exist():
 
 
 def test_failure_delete_named_instance_when_name_no_component_with_given_name():
-    instance = _FirstDummyClassForTest()
+    _ = _FirstDummyClassForTest()
     with pytest.raises(InstanceNotFound) as raised_exception:
         _FirstDummyClassForTest.delete("non default instance")
     assert type(raised_exception.value) is InstanceNotFound
@@ -74,7 +75,7 @@ def test_failure_delete_named_instance_when_name_no_component_with_given_name():
 
 
 def test_can_create_instance_when_no_instance_exist_in_container():
-    instance = _FirstDummyClassForTest()
+    _ = _FirstDummyClassForTest()
 
     # Clean up
     _FirstDummyClassForTest.delete()
@@ -126,3 +127,69 @@ def test_can_create_new_instance_with_different_name():
     _FirstDummyClassForTest.delete("non default instance")
 
 
+def test_object_without_explicit_metaclass_inheriting_from_component_container_are_singleton():
+    instance_first = _InheritedComponentWithoutMetaclass()
+    assert instance_first.counter == 0
+    assert instance_first.second_counter == 0
+
+    instance_second = _InheritedComponentWithoutMetaclass()
+    assert instance_first.counter == 0
+    assert instance_first.second_counter == 0
+
+    assert instance_first is instance_second
+    instance_first.increment()
+    assert instance_first.counter == 1
+    assert instance_first.second_counter == 1
+    assert instance_second.counter == 1
+    assert instance_second.counter == 1
+
+    # Clean up
+    _InheritedComponentWithoutMetaclass.delete()
+
+
+def test_inherited_component_without_explicit_metaclass_does_not_create_singleton_super_component():
+    _ = _InheritedComponentWithoutMetaclass()
+    with pytest.raises(InstanceNotFound) as raised_exception:
+        _FirstDummyClassForTest.delete()
+
+    assert type(raised_exception.value) is InstanceNotFound
+    assert str(raised_exception.value) == "Unable to find an instance for " \
+                                          "'<class 'deafadder_container.MetaTemplate.Component'>' " \
+                                          "with name 'default'"
+
+    # Clean up
+    _InheritedComponentWithoutMetaclass.delete()
+
+
+def test_object_with_explicit_metaclass_inheriting_from_component_container_are_singleton():
+    instance_first = _InheritedComponentWithMetaclass()
+    assert instance_first.counter == 0
+    assert instance_first.second_counter == 0
+
+    instance_second = _InheritedComponentWithMetaclass()
+    assert instance_first.counter == 0
+    assert instance_first.second_counter == 0
+
+    assert instance_first is instance_second
+    instance_first.increment()
+    assert instance_first.counter == 1
+    assert instance_first.second_counter == 1
+    assert instance_second.counter == 1
+    assert instance_second.counter == 1
+
+    # Clean up
+    _InheritedComponentWithMetaclass.delete()
+
+
+def test_inherited_component_with_explicit_metaclass_does_not_create_singleton_super_component():
+    _ = _InheritedComponentWithMetaclass()
+    with pytest.raises(InstanceNotFound) as raised_exception:
+        _FirstDummyClassForTest.delete()
+
+    assert type(raised_exception.value) is InstanceNotFound
+    assert str(raised_exception.value) == "Unable to find an instance for " \
+                                          "'<class 'deafadder_container.MetaTemplate.Component'>' " \
+                                          "with name 'default'"
+
+    # Clean up
+    _InheritedComponentWithMetaclass.delete()
