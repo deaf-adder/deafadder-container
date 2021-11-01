@@ -52,6 +52,13 @@ master_filter: &master_filter
     branches:
       only: develop
 
+no_tag_filter: &no_tag_filter
+  filters:
+    branches:
+      only: /.*/
+    tags:
+      ignore: /.*/
+
 release_tag_filter: &release_tag_filter
   filters:
     branches:
@@ -109,16 +116,35 @@ jobs:
 
 
 workflows:
-  "Main pipeline":
+  "Test pipeline":
     jobs:
       - test-3-7:
           <<: *docker_context
+          <<: *no_tag_filter
       - test-3-8:
           <<: *docker_context
+          <<: *no_tag_filter
       - test-3-9:
           <<: *docker_context
+          <<: *no_tag_filter
       - test-3-10:
           <<: *docker_context
+          <<: *no_tag_filter
+
+  "Buid and deploy pipeline":
+    jobs:
+      - test-3-7:
+          <<: *docker_context
+          <<: *release_tag_filter
+      - test-3-8:
+          <<: *docker_context
+          <<: *release_tag_filter
+      - test-3-9:
+          <<: *docker_context
+          <<: *release_tag_filter
+      - test-3-10:
+          <<: *docker_context
+          <<: *release_tag_filter
       - check-version:
           <<: *docker_context
           <<: *release_tag_filter
@@ -132,4 +158,3 @@ workflows:
           <<: *release_tag_filter
           requires:
             - check-version
-
