@@ -83,7 +83,7 @@ jobs:
   deploy:
     executor: poetry_python_3-7
     steps:
-      - cehckout
+      - checkout
       - run: |
           poetry build --format wheel
           poetry config repositories.deaf-adder-pypi $MY_CIRCLECI_ARTIFACTORY_DEAF_ADDER_REPO
