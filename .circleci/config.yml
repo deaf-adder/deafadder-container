@@ -74,6 +74,8 @@ commands:
           poetry install
           poetry run coverage run -m pytest
           poetry run coverage report
+      - store_test_results:
+          path: test-results
 
 
 
