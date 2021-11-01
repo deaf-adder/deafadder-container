@@ -119,7 +119,7 @@ jobs:
 
 
 workflows:
-  "Test pipeline":
+  "Test only pipeline":
     jobs:
       - test-3-7:
           <<: *docker_context
