@@ -8,4 +8,4 @@ def inject(component, name: str = 'default'):
         return component.__class__.get(instance_name=name)
     if is_a_class(component):
         return component.get(instance_name=name)
-    raise Exception
+    raise Exception # FIXME: use a proper Exception for unexpected behaviour (like, "this piece of code should not be reached"
