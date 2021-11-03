@@ -1,7 +1,10 @@
+from typing import Any, cast
+
 import pytest
 
 from deafadder_container.ContainerException import NotAContainer
 from deafadder_container.DeafAdderUtils import assert_is_deafadder_container
+from deafadder_container.InjectionUtils import wiring
 from deafadder_container.MetaTemplate import Component
 
 
@@ -51,3 +54,8 @@ def test_one():
     assert isinstance(_FirstDummyClassForTest, type) is True
 
     _FirstDummyClassForTest.delete()
+
+
+def test_two():
+    a = wiring(_FirstDummyClassForTest)
+    assert a is None
