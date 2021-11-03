@@ -4,3 +4,7 @@ class DeafAdderContainerException(Exception):
 
 class InstanceNotFound(DeafAdderContainerException):
     pass
+
+
+class NotAContainer(DeafAdderContainerException):
+    pass
