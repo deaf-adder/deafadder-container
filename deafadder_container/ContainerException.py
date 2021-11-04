@@ -8,3 +8,12 @@ class InstanceNotFound(DeafAdderContainerException):
 
 class NotAContainer(DeafAdderContainerException):
     pass
+
+
+class NotAContainerInstance(NotAContainer):
+    pass
+
+
+
+class UnexpectedStatement(DeafAdderContainerException):
+    pass

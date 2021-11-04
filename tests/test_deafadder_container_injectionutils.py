@@ -54,8 +54,3 @@ def test_one():
     assert isinstance(_FirstDummyClassForTest, type) is True
 
     _FirstDummyClassForTest.delete()
-
-
-def test_two():
-    a = wiring(_FirstDummyClassForTest)
-    assert a is None
