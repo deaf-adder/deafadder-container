@@ -1,7 +1,7 @@
 import pytest
 
 from deafadder_container.ContainerException import InstanceNotFound
-from deafadder_container.MetaTemplate import Component
+from deafadder_container.MetaTemplate import Component, get_component_by_type
 
 from .deafadder_container_metatemplate_test_helper import _FirstDummyClassForTest, \
     _SecondDummyClassForTest, _InheritedComponentWithMetaclass, _InheritedComponentWithoutMetaclass
@@ -54,7 +54,8 @@ def test_get_instance_fails_when_no_instance_with_given_name():
 
 def test_get_instance_success_when_instance_exist():
     instance_first = _FirstDummyClassForTest()
-    instance_second = _FirstDummyClassForTest.get()
+    # instance_second = _FirstDummyClassForTest.get()
+    instance_second = get_component_by_type(_FirstDummyClassForTest)
 
     assert instance_first == instance_second
     assert instance_first.counter == 0

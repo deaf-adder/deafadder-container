@@ -42,7 +42,10 @@ def autowire(cls):
         instance = cls(*args, **kwargs)
         attributes = _get_wiring_members(instance)
         for a in attributes:
-            setattr(instance, a["name"], a["actual"].target_type.get(a["actual"].container_name))
+            setattr(
+                instance,
+                a["name"],
+                a["actual"].target_type.get(a["actual"].container_name))
         return instance
 
     return wrapper_autowire

@@ -71,7 +71,7 @@ def get_component_by_name(module_name: str, component_name: str, instance_name: 
 
 
 def get_component_by_type(desc, instance_name: str = "default"):
-    return get_component_by_name(desc.__module__, desc._name__, instance_name=instance_name)
+    return get_component_by_name(desc.__module__, desc.__name__, instance_name=instance_name)
 
 
 def delete_component_by_name(module_name: str, component_name: str, instance_name: str = "default"):

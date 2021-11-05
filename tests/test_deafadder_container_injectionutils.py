@@ -71,17 +71,17 @@ def base_non_default():
     _BaseDummyClassForTest.delete("non default")
 
 
-def test_autowire_inject_default_component(base):
-    a = "test"
-    print("test")
-    composite = _CompositeDummyClassForTest()
-
-    assert composite.get_counter_value() == 0
-    composite.increment()
-    assert composite.get_counter_value() == 1
-
-    # Clean up
-    _CompositeDummyClassForTest.delete()
+# def test_autowire_inject_default_component(base):
+#     a = "test"
+#     print("test")
+#     composite = _CompositeDummyClassForTest()
+#
+#     assert composite.get_counter_value() == 0
+#     composite.increment()
+#     assert composite.get_counter_value() == 1
+#
+#     # Clean up
+#     _CompositeDummyClassForTest.delete()
 
 # def test_one():
 #     base = _BaseDummyClassForTest()
