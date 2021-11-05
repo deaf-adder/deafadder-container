@@ -1,6 +1,7 @@
 import pytest
 
 from deafadder_container.ContainerException import InstanceNotFound
+from deafadder_container.MetaTemplate import Component
 
 from .deafadder_container_metatemplate_test_helper import _FirstDummyClassForTest, \
     _SecondDummyClassForTest, _InheritedComponentWithMetaclass, _InheritedComponentWithoutMetaclass
@@ -14,12 +15,15 @@ ERROR_MESSAGE_FOR_INSTANCE_NOT_FOUND = "Unable to find an instance for " \
 
 def test_delete_instance_success_when_instance_exist():
     _ = _FirstDummyClassForTest()
-    _FirstDummyClassForTest.delete()
+    Component.delete(_FirstDummyClassForTest)
+    # _FirstDummyClassForTest.delete()
 
 
 def test_delete_named_instance_success_when_instance_exist():
     _ = _FirstDummyClassForTest(instance_name=NON_DEFAULT_INSTANCE_NAME)
-    _FirstDummyClassForTest.delete(NON_DEFAULT_INSTANCE_NAME)
+    Component.delete(_FirstDummyClassForTest, NON_DEFAULT_INSTANCE_NAME)
+
+    # _FirstDummyClassForTest.delete(NON_DEFAULT_INSTANCE_NAME)
 
 
 def test_failure_delete_when_no_instance_exist():

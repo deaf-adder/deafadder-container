@@ -46,3 +46,34 @@ class Component(type):
 
     def _get_entry_for_name(cls, instance_name) -> _NamedInstance:
         return next(filter(lambda i: i.name == instance_name, cls._instances[cls]))
+
+
+def get_component_by_name(module_name: str, component_name: str, instance_name: str = "default"):
+    # TODO: to test
+    with Component._lock:
+        if f"{module_name}.{component_name}" not in [f"{c.__module__}.{c.__name__}" for c in Component._instances]:
+            raise InstanceNotFound(f"Unable to find an instance for '{module_name}.{component_name}' with name '{instance_name}'")
+
+        actual_instances = []
+        for k in Component._instances:
+            if f"{module_name}.{component_name}" == f"{k.__module__}.{k.__name__}":
+                actual_instances = Component._instances[k]
+
+        if len(actual_instances) < 1:
+            raise InstanceNotFound(f"Unable to find an instance for '{module_name}.{component_name}' with name '{instance_name}'")
+
+        packed_instance = [ni for ni in actual_instances if ni.name == instance_name]
+        if len(packed_instance) == 1:
+            return packed_instance[0].instance
+        else:
+            raise InstanceNotFound(
+                f"Unable to find an instance for '{module_name}.{component_name}' with name '{instance_name}'")
+
+
+def get_component_by_type(desc, instance_name: str = "default"):
+    return get_component_by_name(desc.__module__, desc._name__, instance_name=instance_name)
+
+
+def delete_component_by_name(module_name: str, component_name: str, instance_name: str = "default"):
+    # TODO
+    pass

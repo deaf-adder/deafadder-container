@@ -4,53 +4,87 @@ import pytest
 
 from deafadder_container.ContainerException import NotAContainer
 from deafadder_container.DeafAdderUtils import assert_is_deafadder_container
-from deafadder_container.InjectionUtils import wiring
+from deafadder_container.InjectionUtils import wiring, autowire
 from deafadder_container.MetaTemplate import Component
 
 
-class _FirstDummyClassForTest(metaclass=Component):
-    """This class is only use as a base class to test metaclass behaviour
-    """
-
-    counter: int
-
-    def __init__(self):
-        self.counter = 0
-
-    def increment(self):
-        self.counter = self.counter + 1
-
-
-def test_exploration():
-    a = _FirstDummyClassForTest()
-    assert_is_deafadder_container(a)
-    assert a is not None
-
-    assert_is_deafadder_container(_FirstDummyClassForTest)
-
-    _FirstDummyClassForTest.delete()
+# class _BaseDummyClassForTest(metaclass=Component):
+#     """This class is only use as a base class to test metaclass behaviour
+#     """
+#
+#     counter: int
+#
+#     def __init__(self):
+#         self.counter = 0
+#
+#     def increment(self):
+#         self.counter = self.counter + 1
 
 
-def test_exploration_bis():
-    with pytest.raises(NotAContainer) as raised_exception:
-        assert_is_deafadder_container(None)
+# @autowire
+# class _CompositeDummyClassForTest(metaclass=Component):
+#
+#     base_service = wiring(_BaseDummyClassForTest)
+#
+#     def get_counter_value(self):
+#         return self.base_service.counter
+#
+#     def increment(self):
+#         self.base_service.increment()
 
-    with pytest.raises(NotAContainer) as raised_exception:
-        assert_is_deafadder_container(1)
+#
+# @autowire
+# class _CompositeDummyClass2ForTest(metaclass=Component):
+#
+#     base_service = wiring(_BaseDummyClassForTest)
+#     composite_service = wiring(_CompositeDummyClassForTest)
+#
+#     def get_counter_value(self):
+#         return self.base_service.counter
+#
+#     def increment(self):
+#         self.base_service.increment()
 
-    with pytest.raises(NotAContainer) as raised_exception:
-        assert_is_deafadder_container("None")
-
-    with pytest.raises(NotAContainer) as raised_exception:
-        assert_is_deafadder_container(True)
 
 
-def test_one():
-    a = _FirstDummyClassForTest()
-    assert_is_deafadder_container(a)
-    assert_is_deafadder_container(_FirstDummyClassForTest)
+# @autowire
+# class _CompositeDummyClassWithNamedComponentForTest(metaclass=Component):
+#     base_service = wiring(_BaseDummyClassForTest, "non default")
+#
+#     def get_counter_value(self):
+#         return self.base_service.counter
+#
+#     def increment(self):
+#         self.base_service.increment()
+from tests.deafadder_container_injectionutils_test_helper import _BaseDummyClassForTest, _CompositeDummyClassForTest
 
-    assert isinstance(a, object) is True
-    assert isinstance(_FirstDummyClassForTest, type) is True
 
-    _FirstDummyClassForTest.delete()
+@pytest.fixture
+def base():
+    yield _BaseDummyClassForTest()
+    _BaseDummyClassForTest.delete()
+
+
+@pytest.fixture
+def base_non_default():
+    yield _BaseDummyClassForTest(instance_name="non default")
+    _BaseDummyClassForTest.delete("non default")
+
+
+def test_autowire_inject_default_component(base):
+    a = "test"
+    print("test")
+    composite = _CompositeDummyClassForTest()
+
+    assert composite.get_counter_value() == 0
+    composite.increment()
+    assert composite.get_counter_value() == 1
+
+    # Clean up
+    _CompositeDummyClassForTest.delete()
+
+# def test_one():
+#     base = _BaseDummyClassForTest()
+#     compo1 = _CompositeDummyClassForTest()
+#     compo2 = _CompositeDummyClass2ForTest()
+
