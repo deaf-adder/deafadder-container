@@ -41,6 +41,11 @@ class Component(type):
             else:
                 raise InstanceNotFound(f"Unable to find an instance for '{type(cls)}' with name '{instance_name}'")
 
+    def delete_all(cls):
+        with cls._lock:
+            if cls in cls._instances:
+                cls._instances.pop(cls)
+
     def _known_instance_name_for_class(cls) -> List[str]:
         return [i.name for i in cls._instances[cls]]
 

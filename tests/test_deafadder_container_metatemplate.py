@@ -209,3 +209,32 @@ def test_inherited_component_with_explicit_metaclass_does_not_create_singleton_s
 
     # Clean up
     Component.delete(_InheritedComponentWithMetaclass)
+
+
+def test_delete_all_instance_of_same_class():
+    instance_1 = _FirstDummyClassForTest()
+    instance_2 = _FirstDummyClassForTest(instance_name="second")
+    assert instance_1 is not None
+    assert instance_2 is not None
+
+    Component.delete_all(_FirstDummyClassForTest)
+
+    with pytest.raises(InstanceNotFound) as first_raised:
+        _ = _FirstDummyClassForTest.get()
+    assert type(first_raised.value) is InstanceNotFound
+    assert str(first_raised.value) == ERROR_MESSAGE_FOR_INSTANCE_NOT_FOUND.format(DEFAULT)
+
+    with pytest.raises(InstanceNotFound) as second_raised:
+        _ = Component.get(_FirstDummyClassForTest)
+    assert type(second_raised.value) is InstanceNotFound
+    assert str(second_raised.value) == ERROR_MESSAGE_FOR_INSTANCE_NOT_FOUND.format(DEFAULT)
+
+    with pytest.raises(InstanceNotFound) as third_raised:
+        _ = _FirstDummyClassForTest.get("second")
+    assert type(third_raised.value) is InstanceNotFound
+    assert str(third_raised.value) == ERROR_MESSAGE_FOR_INSTANCE_NOT_FOUND.format("second")
+
+    with pytest.raises(InstanceNotFound) as fourth_raised:
+        _ = Component.get(_FirstDummyClassForTest, instance_name="second")
+    assert type(fourth_raised.value) is InstanceNotFound
+    assert str(fourth_raised.value) == ERROR_MESSAGE_FOR_INSTANCE_NOT_FOUND.format("second")
