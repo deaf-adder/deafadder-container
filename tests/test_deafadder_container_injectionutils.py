@@ -56,7 +56,8 @@ from deafadder_container.MetaTemplate import Component
 #
 #     def increment(self):
 #         self.base_service.increment()
-from tests.deafadder_container_injectionutils_test_helper import _BaseDummyClassForTest, _CompositeDummyClassForTest
+from tests.deafadder_container_injectionutils_test_helper import _BaseDummyClassForTest, _CompositeDummyClassForTest, \
+    _CompositeDummyClass2ForTest
 
 
 @pytest.fixture
@@ -71,20 +72,25 @@ def base_non_default():
     _BaseDummyClassForTest.delete("non default")
 
 
-# def test_autowire_inject_default_component(base):
-#     a = "test"
-#     print("test")
-#     composite = _CompositeDummyClassForTest()
-#
-#     assert composite.get_counter_value() == 0
-#     composite.increment()
-#     assert composite.get_counter_value() == 1
-#
-#     # Clean up
-#     _CompositeDummyClassForTest.delete()
+def test_autowire_inject_default_component(base):
+    a = "test"
+    print("test")
+    composite = _CompositeDummyClassForTest()
 
-# def test_one():
-#     base = _BaseDummyClassForTest()
-#     compo1 = _CompositeDummyClassForTest()
-#     compo2 = _CompositeDummyClass2ForTest()
+    assert composite.get_counter_value() == 0
+    composite.increment()
+    assert composite.get_counter_value() == 1
+
+    # Clean up
+    # _CompositeDummyClassForTest.delete()
+
+
+def test_one():
+    print("a1")
+    base = _BaseDummyClassForTest()
+    print("a2")
+    compo1 = _CompositeDummyClassForTest()
+    print("a3")
+    compo2 = _CompositeDummyClass2ForTest()
+    print("a4")
 

@@ -3,6 +3,7 @@ import inspect
 
 from deafadder_container.ContainerException import UnexpectedStatement, NotAContainerInstance
 from deafadder_container.DeafAdderUtils import assert_is_deafadder_container, is_an_instance, is_a_class
+from deafadder_container.MetaTemplate import get_component_by_type
 
 
 class _WiringDescriptor:
@@ -45,12 +46,13 @@ def autowire(cls):
             setattr(
                 instance,
                 a["name"],
-                a["actual"].target_type.get(a["actual"].container_name))
+                get_component_by_type(a["actual"].target_type, a["actual"].container_name))
         return instance
 
     return wrapper_autowire
 
 
+# FIXME: this one won't work as it is die to function transformation of the class after autowiring
 def inject(component, name: str = 'default'):
     assert_is_deafadder_container(component)
     if is_an_instance(component):

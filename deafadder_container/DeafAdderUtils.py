@@ -10,12 +10,16 @@ def assert_is_deafadder_container(candidate):
 
 
 def _is_one_ancestor_a_component(candidate) -> bool:
+    print(candidate)
     if type(candidate) is type:
         return False
     if type(candidate) is Component:
         return True
     if isinstance(candidate, types.FunctionType):
+        print("is a function")
+        print(candidate)
         components_full_name = [f'{c.__module__}.{c.__name__}' for c in Component._instances]
+        print(components_full_name)
         if f'{candidate.__module__}.{candidate.__name__}' in components_full_name:
             return True
     else:

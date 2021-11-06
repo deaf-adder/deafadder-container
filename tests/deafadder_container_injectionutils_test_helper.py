@@ -33,18 +33,17 @@ class _CompositeDummyClassForTest(metaclass=Component):
         self.base_service.increment()
 
 
-# @autowire
-# class _CompositeDummyClass2ForTest(metaclass=Component):
-#
-#     base_service = wiring(_BaseDummyClassForTest)
-#     composite_service = wiring(_CompositeDummyClassForTest)
-#
-#     def get_counter_value(self):
-#         return self.base_service.counter
-#
-#     def increment(self):
-#         self.base_service.increment()
+@autowire
+class _CompositeDummyClass2ForTest(metaclass=Component):
 
+    base_service = wiring(_BaseDummyClassForTest)
+    composite_service = wiring(_CompositeDummyClassForTest)
+
+    def get_counter_value(self):
+        return self.base_service.counter
+
+    def increment(self):
+        self.base_service.increment()
 
 
 @autowire
