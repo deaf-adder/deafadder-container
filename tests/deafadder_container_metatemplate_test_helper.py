@@ -55,3 +55,47 @@ class _InheritedComponentWithoutMetaclass(_FirstDummyClassForTest):
     def increment(self):
         self.counter = self.counter + 1
         self.second_counter = self.second_counter + 1
+
+
+class _CompositeDummyClassForTest(metaclass=Component):
+
+    base_service: _FirstDummyClassForTest
+
+    def __init__(self):
+        self.base_service = _FirstDummyClassForTest.get()
+
+    def get_counter_value(self):
+        return self.base_service.counter
+
+    def increment(self):
+        self.base_service.increment()
+
+
+class _CompositeDummyClass2ForTest(metaclass=Component):
+
+    base_service: _FirstDummyClassForTest
+    composite_service: _CompositeDummyClassForTest
+
+    def __init__(self):
+        self.base_service = _FirstDummyClassForTest.get()
+        self.composite_service = _CompositeDummyClassForTest.get()
+
+    def get_counter_value(self):
+        return self.base_service.counter
+
+    def increment(self):
+        self.base_service.increment()
+
+
+class _CompositeDummyClassWithNamedComponentForTest(metaclass=Component):
+
+    base_service: _FirstDummyClassForTest
+
+    def __init__(self):
+        self.base_service = _FirstDummyClassForTest.get("non default")
+
+    def get_counter_value(self):
+        return self.base_service.counter
+
+    def increment(self):
+        self.base_service.increment()
