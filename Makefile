@@ -21,3 +21,5 @@ lint:
 	poetry run flake8
 
 
+doc-serve:
+	./node_modules/docsify-cli/bin/docsify serve docs

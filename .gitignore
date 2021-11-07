@@ -4,3 +4,4 @@
 .pytest_cache/
 .coverage
 __pycache__/
+node_modules/
