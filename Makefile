@@ -23,3 +23,7 @@ lint:
 
 doc-serve:
 	./node_modules/docsify-cli/bin/docsify serve docs
+
+
+qodana:
+	docker run --rm -it -v $$(pwd):/data/project/ -p 8080:8080 jetbrains/qodana-python --show-report
