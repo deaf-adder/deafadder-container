@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from threading import Lock
 from typing import Any, Dict, List
-from deafadder_container.ContainerException import InstanceNotFound
+from deafadder_container.ContainerException import InstanceNotFound, MultipleAutowireReference, \
+    AnnotatedDeclarationMissing
 
 DEFAULT_INSTANCE_NAME = "default"
 import inspect
@@ -104,12 +105,12 @@ class _Autowire:
         len_all_args = len(all_args_name)
         len_set_args = len(set(all_args_name))
         if len_set_args != len_all_args:
-            raise Exception("One argument is referenced multiple times in autowire.")
+            raise MultipleAutowireReference("One argument is referenced multiple times in autowire.")
 
         annotated_elements = [i[0] for i in self._autowire_candidates]
         not_annotated_elements_in_explicit_autowire = [i for i in all_args_name if i not in annotated_elements]
         if len(not_annotated_elements_in_explicit_autowire) > 0:
-            raise Exception("Element to autowire should be defined and annotated at class level.")
+            raise AnnotatedDeclarationMissing("Element to autowire should be defined and annotated at class level.")
 
         all_autowire_candidate = {i[0]:i[1] for i in self._autowire_candidates}
         self._autowire_non_default_candidates = [(i[0], i[1], all_autowire_candidate[i[0]]) for i in flattened_args]

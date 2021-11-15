@@ -1,4 +1,3 @@
-import inspect
 from functools import wraps
 
 
@@ -10,11 +9,3 @@ def autowire(*args, **kwargs):
             return instance
         return wrapper_decorator
     return decorator_autowire
-
-
-def testing(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        instance = func(*args, **kwargs)
-        return instance
-    return wrapper

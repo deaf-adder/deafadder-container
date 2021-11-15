@@ -74,7 +74,7 @@ commands:
           poetry install
           mkdir test-results
           poetry run coverage run -m pytest --junitxml=test-results/junit.xml
-          poetry run coverage report
+          poetry run coverage report -m
       - store_test_results:
           path: test-results
 

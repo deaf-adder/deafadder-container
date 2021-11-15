@@ -10,7 +10,7 @@ SHELL = /bin/bash
 coverage:
 	source .venv/bin/activate
 	poetry run coverage run -m pytest
-	poetry run coverage report
+	poetry run coverage report -m
 
 
 check-version:
