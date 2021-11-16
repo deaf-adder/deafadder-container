@@ -77,14 +77,12 @@ class _Autowire:
         self.autowire_triplet_candidates = [*self._autowire_default_candidates, *self._autowire_non_default_candidates]
 
     def _is_component(self, clazz) -> bool:
-        if type(clazz) is type:
-            return False
-        elif type(clazz) is Component:
-            return True
-        elif clazz in Component._instances:
+        # type(x) return the metaclass of the class (whatever the inheritance level)
+        # so type(x) is either Component or something else in our case
+        if type(clazz) is Component:
             return True
         else:
-            return self._is_component(type(clazz))
+            return False
 
     def _infer_autowire_candidates(self):
         annotations = self._instance.__annotations__
@@ -136,8 +134,12 @@ def _get_init_decorators(cls):
             if isinstance(n, ast.Call):
                 name = n.func.attr if isinstance(n.func, ast.Attribute) else n.func.id
                 decorator_args = [(decorator_arg.arg, decorator_arg.value.value) for decorator_arg in n.keywords]
-            else:
-                name = n.attr if isinstance(n, ast.Attribute) else n.id
+            # to be complete, the decorator without parenthesis should be included. But since we
+            # don't really need it, we can ignore it for now
+            #
+            # Sample code to be complete
+            # > else:
+            # >    name = n.attr if isinstance(n, ast.Attribute) else n.id
 
             if name not in init_decorators:
                 init_decorators[name] = []

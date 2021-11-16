@@ -98,6 +98,28 @@ class _Dummy9(metaclass=Component):
         self.service3 = Component.get(_Dummy3)
 
 
+class _Dummy10(_Dummy1):
+
+    service1: _Dummy1
+    service2: _Dummy2
+
+
+class _Dummy11(_Dummy1):
+    pass
+
+
+class _Dummy12(_Dummy11):
+    pass
+
+
+class _Dummy13(metaclass=Component):
+
+    service1: _Dummy12
+
+    def get_thirteen(self):
+        return 13
+
+
 @pytest.fixture
 def dummy1_default():
     yield _Dummy1()
@@ -126,6 +148,18 @@ def dummy3_non_default_1():
 def dummy3_non_default_2():
     yield _Dummy3(instance_name="non default 2")
     Component.delete(_Dummy3, instance_name="non default 2")
+
+
+@pytest.fixture
+def dummy10_default(dummy1_default, dummy2_default):
+    yield _Dummy10()
+    Component.delete(_Dummy10)
+
+
+@pytest.fixture
+def dummy12_default():
+    yield _Dummy12()
+    Component.delete(_Dummy12)
 
 
 def test_default_autowire_for_non_set_annotated_component(dummy1_default, dummy2_default):
@@ -204,3 +238,23 @@ def test_cant_explicit_autowire_multiple_time_the_same_field(dummy3_default, dum
 
     assert type(expected_raise.value) is MultipleAutowireReference
     assert str(expected_raise.value) == "One argument is referenced multiple times in autowire."
+
+
+def test_can_extend_and_require_same_dependency(dummy1_default, dummy2_default):
+
+    dummy10 = _Dummy10()
+
+    assert dummy10.get_one() == 1
+    assert dummy10.service1.get_one() == 1
+    assert dummy10.service2.get_two() == 2
+
+    Component.delete(_Dummy10)
+
+
+def test_can_autowire_inherited_component(dummy12_default):
+    dummy13 = _Dummy13()
+
+    assert dummy13.get_thirteen() == 13
+    assert dummy13.service1.get_one() == 1
+
+    Component.delete(_Dummy13)
