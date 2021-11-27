@@ -10,7 +10,7 @@ and any evolution might lead to breaking changes. **This will remain true until 
 A simple container manager based on `metaclass`. Each container will be a singleton (but not limited to) and their
 instance can easily be retrieved.
 
-See the [Quick start](quickstart.md) guide for more details.
+See the [Quick start](GettingStarted/quickstart.md) guide for more details.
 
 ## Why
 

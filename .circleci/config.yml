@@ -31,6 +31,12 @@ executors:
         auth:
           username: $MY_CIRCLECI_DOCKERHUB_USERNAME
           password: $MY_CIRCLECI_DOCKERHUB_PASSWORD
+  git:
+    docker:
+      - image: leddzip/ubuntu-git:20.04
+        auth:
+          username: $MY_CIRCLECI_DOCKERHUB_USERNAME
+          password: $MY_CIRCLECI_DOCKERHUB_PASSWORD
 
 
 docker_context: &docker_context
@@ -50,7 +56,7 @@ develop_filter: &develop_filter
 master_filter: &master_filter
   filters:
     branches:
-      only: develop
+      only: master
 
 no_tag_filter: &no_tag_filter
   filters:
@@ -116,7 +122,20 @@ jobs:
     steps:
       - checkout
       - run: bash ./build-scripts/check_version.sh
-
+  handle-merge-commit:
+    executor: git
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "d4:c1:89:ea:55:06:44:3d:88:62:b4:b7:99:5d:0a:75"
+      - checkout
+      - run: |
+          ssh-add -D
+          ssh-add ~/.ssh/id_rsa_d4c189ea5506443d8862b4b7995d0a75
+          git config --global user.email "albert-bot@leddzip.com"
+          git config --global user.name "Albert Bot"
+          bash ./handle-release.sh "$(cat version)"
+          bash ./handle-hotfix.sh "$(cat version)"
 
 workflows:
   "Test only pipeline":
@@ -133,6 +152,34 @@ workflows:
       - test-3-10:
           <<: *docker_context
           <<: *no_tag_filter
+
+  "Master pipeline":
+    jobs:
+      - test-3-7:
+          <<: *docker_context
+          <<: *master_filter
+      - test-3-8:
+          <<: *docker_context
+          <<: *master_filter
+      - test-3-9:
+          <<: *docker_context
+          <<: *master_filter
+      - test-3-10:
+          <<: *docker_context
+          <<: *master_filter
+      - check-version:
+          <<: *docker_context
+          <<: *master_filter
+          requires:
+            - test-3-7
+            - test-3-8
+            - test-3-9
+            - test-3-10
+      - handle-merge-commit:
+          <<: *docker_context
+          <<: *master_filter
+          requires:
+            - check-version
 
   "Buid and deploy pipeline":
     jobs:
