@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  jira: circleci/jira@1.3.1
+
 executors:
   poetry_python_3-7:
     docker:
@@ -144,7 +147,6 @@ jobs:
           git config --global user.email "albert-bot@leddzip.com"
           git config --global user.name "Albert Bot"
           bash ./handle-release.sh "$(cat deafadder_container/__init__.py | grep "__version__" | grep -o -e "[0-9]*\.[0-9]*\.[0-9]*")"
-          bash ./handle-hotfix.sh "$(cat version)"
 
 workflows:
   "Test only pipeline":
@@ -169,6 +171,10 @@ workflows:
             - test-3-8
             - test-3-9
             - test-3-10
+          post-steps:
+            - jira/notify:
+                environment_type: development
+                job_type: testing
 
 
   "Master pipeline":
@@ -206,6 +212,10 @@ workflows:
           <<: *master_filter
           requires:
             - check-version
+          post-steps:
+            - jira/notify:
+                environment_type: production
+                job_type: testing
 
   "Buid and deploy pipeline":
     jobs:
@@ -242,3 +252,8 @@ workflows:
           <<: *release_tag_filter
           requires:
             - check-version
+          post-steps:
+            - jira/notify:
+                environment_type: production
+                job_type: deployment
+
