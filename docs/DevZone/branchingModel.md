@@ -62,12 +62,12 @@ As soon as there is a new commit pushed to any branches, test suites will be lau
 
 No other purpose than to let the developer now the status of his build.
 
-### Merging from feature to master
+### Merging from release to master
 
 * When a commit arrive on `master`
 * And this commit have two parent
-* And those parent are `master` and `feature/xxx`
-* Then the CI will tag the commit with the appropriate version `X.Y.Z`
+* And those parent are `master` and `release/xxx`
+* Then the CI will tag the commit with the appropriate version `release-vX.Y.Z`
 
 ### Merging from hotfix to master
 
@@ -75,9 +75,9 @@ No other purpose than to let the developer now the status of his build.
 * And this commit have two parent
 * And those parents are `mater` and `hotfix/xxx`
 * Then CI will create a new commit on master with updated bugfix version in the versions files
-* And it will tag this commit with a new version tag `X.Y.Z`
+* And it will tag this commit with a new version tag `release-vX.Y.Z`
 
 ### tagging
 
-* When a new tag with the pattern `X.Y.Z` is set
+* When a new tag with the pattern `release-vX.Y.Z` is set
 * Then CI will deploy the lib to artifactory
