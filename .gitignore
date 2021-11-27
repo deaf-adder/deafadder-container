@@ -5,3 +5,5 @@
 .coverage
 __pycache__/
 node_modules/
+htmlcov/
+report/
