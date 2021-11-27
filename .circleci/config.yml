@@ -87,9 +87,10 @@ commands:
   report:
     steps:
       - run: |
-          /opt/idea/bin/entrypoint --save-report
+          mkdir qodana
+          /opt/idea/bin/entrypoint --results-dir=qodana --save-report --report-dir=qodana/report
       - store_artifacts:
-          path: report
+          path: qodana
 
 
 jobs:
