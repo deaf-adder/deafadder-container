@@ -37,6 +37,12 @@ executors:
         auth:
           username: $MY_CIRCLECI_DOCKERHUB_USERNAME
           password: $MY_CIRCLECI_DOCKERHUB_PASSWORD
+  qodana:
+    docker:
+      - image: jetbrains/qodana-python
+        auth:
+          username: $MY_CIRCLECI_DOCKERHUB_USERNAME
+          password: $MY_CIRCLECI_DOCKERHUB_PASSWORD
 
 
 docker_context: &docker_context
@@ -76,11 +82,11 @@ commands:
           mkdir test-results
           poetry run coverage run -m pytest --junitxml=test-results/junit.xml
           poetry run coverage report -m
+          poetry run coverage html
       - store_test_results:
           path: test-results
-
-
-
+      - store_artifacts:
+          path: htmlcov
 
 jobs:
   test-3-7:
@@ -103,6 +109,14 @@ jobs:
     steps:
       - checkout
       - test
+  qodana-report:
+    executor: qodana
+    steps:
+      - checkout
+      - run: |
+          /opt/idea/bin/entrypoint --save-report
+      - store_artifacts:
+          path: /data/results/report
   deploy:
     executor: poetry_python_3-7
     steps:
@@ -147,6 +161,15 @@ workflows:
       - test-3-10:
           <<: *docker_context
           <<: *no_tag_filter
+      - qodana-report:
+          <<: *docker_context
+          <<: *no_tag_filter
+          requires:
+            - test-3-7
+            - test-3-8
+            - test-3-9
+            - test-3-10
+
 
   "Master pipeline":
     jobs:
@@ -163,6 +186,14 @@ workflows:
           <<: *docker_context
           <<: *master_filter
       - check-version:
+          <<: *docker_context
+          <<: *master_filter
+          requires:
+            - test-3-7
+            - test-3-8
+            - test-3-9
+            - test-3-10
+      - qodana-report:
           <<: *docker_context
           <<: *master_filter
           requires:
@@ -191,6 +222,14 @@ workflows:
           <<: *docker_context
           <<: *release_tag_filter
       - check-version:
+          <<: *docker_context
+          <<: *release_tag_filter
+          requires:
+            - test-3-7
+            - test-3-8
+            - test-3-9
+            - test-3-10
+      - qodana-report:
           <<: *docker_context
           <<: *release_tag_filter
           requires:
