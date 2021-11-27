@@ -116,11 +116,11 @@ jobs:
           echo "-----------"
           ls
           echo "-----------"
-          ls /root/project/qodana
-          echo "-----------"
           ls /data/project
           echo "-----------"
-          /opt/idea/bin/entrypoint --results-dir=/root/project/qodana --save-report --report-dir=/root/project/qodana/report
+          /opt/idea/bin/entrypoint --save-report
+          echo "-----------"
+          ls /root/project/qodana
       - store_artifacts:
           path: /root/project/qodana/report
   deploy:
