@@ -84,6 +84,8 @@ commands:
           poetry run coverage report -m
       - store_test_results:
           path: test-results
+      - store_artifacts:
+          path: test-results
 
 
 jobs:
