@@ -174,7 +174,7 @@ workflows:
           post-steps:
             - jira/notify:
                 environment_type: development
-                job_type: testing
+                job_type: build
 
 
   "Master pipeline":
@@ -215,7 +215,7 @@ workflows:
           post-steps:
             - jira/notify:
                 environment_type: production
-                job_type: testing
+                job_type: build
 
   "Buid and deploy pipeline":
     jobs:
