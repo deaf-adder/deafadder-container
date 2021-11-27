@@ -120,7 +120,7 @@ jobs:
           echo "-----------"
           /opt/idea/bin/entrypoint --save-report
           echo "-----------"
-          ls /root/project/qodana
+          ls /root/project
       - store_artifacts:
           path: /root/project/qodana/report
   deploy:
