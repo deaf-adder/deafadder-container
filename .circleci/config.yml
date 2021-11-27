@@ -112,21 +112,9 @@ jobs:
     steps:
       - checkout
       - run: |
-          pwd
-          echo "-----------"
-          ls
-          echo "-----------"
-          ls /data/project
-          echo "-----------"
           /opt/idea/bin/entrypoint --save-report
-          echo "-----------"
-          ls /root/project
-          echo "-----------"
-          ls /data/project
-          echo "-----------"
-          ls /data/results
       - store_artifacts:
-          path: /root/project/qodana/report
+          path: /data/results/report
   deploy:
     executor: poetry_python_3-7
     steps:
