@@ -123,6 +123,8 @@ jobs:
           ls /root/project
           echo "-----------"
           ls /data/project
+          echo "-----------"
+          ls /data/results
       - store_artifacts:
           path: /root/project/qodana/report
   deploy:
