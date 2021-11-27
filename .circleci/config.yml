@@ -48,11 +48,6 @@ docker_and_artifactory_context: &docker_and_artifactory_context
     - Leddzip Dockerhub
     - Leddzip Python Artifactory
 
-develop_filter: &develop_filter
-  filters:
-    branches:
-      only: develop
-
 master_filter: &master_filter
   filters:
     branches:
