@@ -82,11 +82,11 @@ commands:
           mkdir test-results
           poetry run coverage run -m pytest --junitxml=test-results/junit.xml
           poetry run coverage report -m
+          poetry run coverage html
       - store_test_results:
           path: test-results
       - store_artifacts:
-          path: test-results
-
+          path: htmlcov
 
 jobs:
   test-3-7:
