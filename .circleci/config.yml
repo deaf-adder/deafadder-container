@@ -46,6 +46,12 @@ executors:
         auth:
           username: $MY_CIRCLECI_DOCKERHUB_USERNAME
           password: $MY_CIRCLECI_DOCKERHUB_PASSWORD
+  circle-ci-node:
+    docker:
+      - image: circleci/node:17.1.0
+        auth:
+          username: $MY_CIRCLECI_DOCKERHUB_USERNAME
+          password: $MY_CIRCLECI_DOCKERHUB_PASSWORD
 
 
 docker_context: &docker_context
@@ -147,6 +153,10 @@ jobs:
           git config --global user.email "albert-bot@leddzip.com"
           git config --global user.name "Albert Bot"
           bash ./handle-release.sh "$(cat deafadder_container/__init__.py | grep "__version__" | grep -o -e "[0-9]*\.[0-9]*\.[0-9]*")"
+  jira-hook:
+    executor: circle-ci-node
+    steps:
+      - run: echo "job done"
 
 workflows:
   "Test only pipeline":
@@ -171,6 +181,11 @@ workflows:
             - test-3-8
             - test-3-9
             - test-3-10
+      - jira-hook:
+          <<: *docker_context
+          <<: *no_tag_filter
+          requires:
+            - qodana-report
           post-steps:
             - jira/notify:
                 environment_type: development
@@ -212,6 +227,11 @@ workflows:
           <<: *master_filter
           requires:
             - check-version
+      - jira-hook:
+          <<: *docker_context
+          <<: *master_filter
+          requires:
+            - handle-merge-commit
           post-steps:
             - jira/notify:
                 environment_type: production
@@ -252,6 +272,11 @@ workflows:
           <<: *release_tag_filter
           requires:
             - check-version
+      - jira-hook:
+          <<: *docker_context
+          <<: *release_tag_filter
+          requires:
+            - deploy
           post-steps:
             - jira/notify:
                 environment_type: production
