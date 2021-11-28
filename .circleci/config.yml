@@ -143,6 +143,7 @@ jobs:
           ssh-add ~/.ssh/id_rsa_d4c189ea5506443d8862b4b7995d0a75
           git config --global user.email "albert-bot@leddzip.com"
           git config --global user.name "Albert Bot"
+          git fetch --all
           bash ./build-scripts/handle-release.sh "$(cat deafadder_container/__init__.py | grep "__version__" | grep -o -e "[0-9]*\.[0-9]*\.[0-9]*")"
           bash ./build-scripts/handle-hotfix.sh "$(cat version)"
 
