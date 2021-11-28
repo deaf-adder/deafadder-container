@@ -1,5 +1,5 @@
 
-set -eux
+set -eu
 
 COMMIT_PATTERN="[a-f0-9]{7}"
 MERGE_PATTERN="$COMMIT_PATTERN $COMMIT_PATTERN"

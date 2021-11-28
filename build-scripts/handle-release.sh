@@ -1,4 +1,4 @@
-set -eux
+set -eu
 
 target="$(./build-scripts/get-parent.sh)"
 release="$1"
