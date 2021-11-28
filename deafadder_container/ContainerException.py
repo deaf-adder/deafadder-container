@@ -4,3 +4,11 @@ class DeafAdderContainerException(Exception):
 
 class InstanceNotFound(DeafAdderContainerException):
     pass
+
+
+class MultipleAutowireReference(DeafAdderContainerException):
+    pass
+
+
+class AnnotatedDeclarationMissing(DeafAdderContainerException):
+    pass

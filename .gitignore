@@ -4,3 +4,7 @@
 .pytest_cache/
 .coverage
 __pycache__/
+node_modules/
+htmlcov/
+report/
+qodana/

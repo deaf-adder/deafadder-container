@@ -10,7 +10,7 @@ SHELL = /bin/bash
 coverage:
 	source .venv/bin/activate
 	poetry run coverage run -m pytest
-	poetry run coverage report
+	poetry run coverage report -m
 
 
 check-version:
@@ -21,3 +21,9 @@ lint:
 	poetry run flake8
 
 
+doc-serve:
+	./node_modules/docsify-cli/bin/docsify serve docs
+
+
+qodana:
+	docker run --rm -it -v $$(pwd):/data/project/ -p 8080:8080 jetbrains/qodana-python --show-report
