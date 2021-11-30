@@ -108,7 +108,8 @@ class _Autowire:
         annotated_elements = [i[0] for i in self._autowire_candidates]
         not_annotated_elements_in_explicit_autowire = [i for i in all_args_name if i not in annotated_elements]
         if len(not_annotated_elements_in_explicit_autowire) > 0:
-            raise AnnotatedDeclarationMissing("Element to autowire should be defined and annotated at class level.")
+            raise AnnotatedDeclarationMissing(f"Elements to autowire '{', '.join(not_annotated_elements_in_explicit_autowire)}'"
+                                              f" should be defined and annotated at class level.")
 
         all_autowire_candidate = {i[0]:i[1] for i in self._autowire_candidates}
         self._autowire_non_default_candidates = [(i[0], i[1], all_autowire_candidate[i[0]]) for i in flattened_args]

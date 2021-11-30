@@ -221,7 +221,7 @@ def test_explicit_autowire_cant_map_non_declared_annotated_component(dummy3_defa
         _ = _Dummy7()
 
     assert type(expected_raise.value) is AnnotatedDeclarationMissing
-    assert str(expected_raise.value) == "Element to autowire should be defined and annotated at class level."
+    assert str(expected_raise.value) == "Elements to autowire 'service7' should be defined and annotated at class level."
 
 
 def test_explicit_autowire_try_to_override_already_set_component_fails(dummy3_default, dummy3_non_default_1, dummy3_non_default_2):
@@ -229,7 +229,7 @@ def test_explicit_autowire_try_to_override_already_set_component_fails(dummy3_de
         _ = _Dummy8()
 
     assert type(expected_raise.value) is AnnotatedDeclarationMissing
-    assert str(expected_raise.value) == "Element to autowire should be defined and annotated at class level."
+    assert str(expected_raise.value) == "Elements to autowire 'service3' should be defined and annotated at class level."
 
 
 def test_cant_explicit_autowire_multiple_time_the_same_field(dummy3_default, dummy3_non_default_1, dummy3_non_default_2):
