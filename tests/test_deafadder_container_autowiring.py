@@ -237,7 +237,7 @@ def test_cant_explicit_autowire_multiple_time_the_same_field(dummy3_default, dum
         _ = _Dummy9()
 
     assert type(expected_raise.value) is MultipleAutowireReference
-    assert str(expected_raise.value) == "One argument is referenced multiple times in autowire."
+    assert str(expected_raise.value) == "The following arguments are referenced multiple times in autowire: service6"
 
 
 def test_can_extend_and_require_same_dependency(dummy1_default, dummy2_default):
