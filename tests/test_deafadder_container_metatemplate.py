@@ -9,8 +9,10 @@ from .deafadder_container_metatemplate_test_helper import _FirstDummyClassForTes
 
 DEFAULT = "default"
 NON_DEFAULT_INSTANCE_NAME = "non default instance"
-ERROR_MESSAGE_FOR_INSTANCE_NOT_FOUND = "Unable to find an instance for " \
-                                       "'<class 'deafadder_container.MetaTemplate.Component'>' with name '{}'"
+
+
+def instance_not_found_message(cls, name="default"):
+    return f"Unable to find an instance for {cls} with name '{name}'"
 
 
 def test_delete_instance_success_when_instance_exist():
@@ -27,14 +29,14 @@ def test_failure_delete_when_no_instance_exist():
     with pytest.raises(InstanceNotFound) as raised_exception:
         Component.delete(_FirstDummyClassForTest)
     assert type(raised_exception.value) is InstanceNotFound
-    assert str(raised_exception.value) == ERROR_MESSAGE_FOR_INSTANCE_NOT_FOUND.format(DEFAULT)
+    assert str(raised_exception.value) == instance_not_found_message(_FirstDummyClassForTest)
 
 
 def test_get_instance_fails_when_no_instance_exist():
     with pytest.raises(InstanceNotFound) as raised_exception:
         _ = Component.get(_FirstDummyClassForTest)
     assert type(raised_exception.value) is InstanceNotFound
-    assert str(raised_exception.value) == ERROR_MESSAGE_FOR_INSTANCE_NOT_FOUND.format(DEFAULT)
+    assert str(raised_exception.value) == instance_not_found_message(_FirstDummyClassForTest)
 
 
 def test_get_instance_fails_when_no_instance_with_given_name():
@@ -43,7 +45,7 @@ def test_get_instance_fails_when_no_instance_with_given_name():
     with pytest.raises(InstanceNotFound) as raised_exception:
         _ = Component.get(_FirstDummyClassForTest, NON_DEFAULT_INSTANCE_NAME)
     assert type(raised_exception.value) is InstanceNotFound
-    assert str(raised_exception.value) == ERROR_MESSAGE_FOR_INSTANCE_NOT_FOUND.format(NON_DEFAULT_INSTANCE_NAME)
+    assert str(raised_exception.value) == instance_not_found_message(_FirstDummyClassForTest, NON_DEFAULT_INSTANCE_NAME)
 
     # Clean up
     Component.delete(_FirstDummyClassForTest)
@@ -69,7 +71,7 @@ def test_failure_delete_named_instance_when_name_no_component_with_given_name():
     with pytest.raises(InstanceNotFound) as raised_exception:
         Component.delete(_FirstDummyClassForTest, NON_DEFAULT_INSTANCE_NAME)
     assert type(raised_exception.value) is InstanceNotFound
-    assert str(raised_exception.value) == ERROR_MESSAGE_FOR_INSTANCE_NOT_FOUND.format(NON_DEFAULT_INSTANCE_NAME)
+    assert str(raised_exception.value) == instance_not_found_message(_FirstDummyClassForTest, NON_DEFAULT_INSTANCE_NAME)
 
     # Clean up
     Component.delete(_FirstDummyClassForTest)
@@ -173,7 +175,7 @@ def test_inherited_component_without_explicit_metaclass_does_not_create_singleto
         Component.delete(_FirstDummyClassForTest)
 
     assert type(raised_exception.value) is InstanceNotFound
-    assert str(raised_exception.value) == ERROR_MESSAGE_FOR_INSTANCE_NOT_FOUND.format(DEFAULT)
+    assert str(raised_exception.value) == instance_not_found_message(_FirstDummyClassForTest)
 
     # Clean up
     Component.delete(_InheritedComponentWithoutMetaclass)
@@ -205,7 +207,7 @@ def test_inherited_component_with_explicit_metaclass_does_not_create_singleton_s
         Component.delete(_FirstDummyClassForTest)
 
     assert type(raised_exception.value) is InstanceNotFound
-    assert str(raised_exception.value) == ERROR_MESSAGE_FOR_INSTANCE_NOT_FOUND.format(DEFAULT)
+    assert str(raised_exception.value) == instance_not_found_message(_FirstDummyClassForTest)
 
     # Clean up
     Component.delete(_InheritedComponentWithMetaclass)
@@ -222,19 +224,19 @@ def test_delete_all_instance_of_same_class():
     with pytest.raises(InstanceNotFound) as first_raised:
         _ = _FirstDummyClassForTest.get()
     assert type(first_raised.value) is InstanceNotFound
-    assert str(first_raised.value) == ERROR_MESSAGE_FOR_INSTANCE_NOT_FOUND.format(DEFAULT)
+    assert str(first_raised.value) == instance_not_found_message(_FirstDummyClassForTest)
 
     with pytest.raises(InstanceNotFound) as second_raised:
         _ = Component.get(_FirstDummyClassForTest)
     assert type(second_raised.value) is InstanceNotFound
-    assert str(second_raised.value) == ERROR_MESSAGE_FOR_INSTANCE_NOT_FOUND.format(DEFAULT)
+    assert str(second_raised.value) == instance_not_found_message(_FirstDummyClassForTest)
 
     with pytest.raises(InstanceNotFound) as third_raised:
         _ = _FirstDummyClassForTest.get("second")
     assert type(third_raised.value) is InstanceNotFound
-    assert str(third_raised.value) == ERROR_MESSAGE_FOR_INSTANCE_NOT_FOUND.format("second")
+    assert str(third_raised.value) == instance_not_found_message(_FirstDummyClassForTest, "second")
 
     with pytest.raises(InstanceNotFound) as fourth_raised:
         _ = Component.get(_FirstDummyClassForTest, instance_name="second")
     assert type(fourth_raised.value) is InstanceNotFound
-    assert str(fourth_raised.value) == ERROR_MESSAGE_FOR_INSTANCE_NOT_FOUND.format("second")
+    assert str(fourth_raised.value) == instance_not_found_message(_FirstDummyClassForTest, "second")

@@ -36,14 +36,14 @@ class Component(type):
         if cls in cls._instances and instance_name in cls._known_instance_name_for_class():
             return cls._get_entry_for_name(instance_name).instance
         else:
-            raise InstanceNotFound(f"Unable to find an instance for '{type(cls)}' with name '{instance_name}'")
+            raise InstanceNotFound(f"Unable to find an instance for {cls} with name '{instance_name}'")
 
     def delete(cls, instance_name: str = DEFAULT_INSTANCE_NAME):
         with cls._lock:
             if cls in cls._instances and instance_name in cls._known_instance_name_for_class():
                 cls._instances[cls] = list(filter(lambda i: i.name != instance_name, cls._instances[cls]))
             else:
-                raise InstanceNotFound(f"Unable to find an instance for '{type(cls)}' with name '{instance_name}'")
+                raise InstanceNotFound(f"Unable to find an instance for {cls} with name '{instance_name}'")
 
     def delete_all(cls):
         with cls._lock:
