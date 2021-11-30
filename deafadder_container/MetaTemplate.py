@@ -36,14 +36,14 @@ class Component(type):
         if cls in cls._instances and instance_name in cls._known_instance_name_for_class():
             return cls._get_entry_for_name(instance_name).instance
         else:
-            raise InstanceNotFound(f"Unable to find an instance for '{type(cls)}' with name '{instance_name}'")
+            raise InstanceNotFound(f"Unable to find an instance for {cls} with name '{instance_name}'")
 
     def delete(cls, instance_name: str = DEFAULT_INSTANCE_NAME):
         with cls._lock:
             if cls in cls._instances and instance_name in cls._known_instance_name_for_class():
                 cls._instances[cls] = list(filter(lambda i: i.name != instance_name, cls._instances[cls]))
             else:
-                raise InstanceNotFound(f"Unable to find an instance for '{type(cls)}' with name '{instance_name}'")
+                raise InstanceNotFound(f"Unable to find an instance for {cls} with name '{instance_name}'")
 
     def delete_all(cls):
         with cls._lock:
@@ -76,7 +76,8 @@ class _Autowire:
         self._infer_autowire_default_candidates()
         self.autowire_triplet_candidates = [*self._autowire_default_candidates, *self._autowire_non_default_candidates]
 
-    def _is_component(self, clazz) -> bool:
+    @staticmethod
+    def _is_component(clazz) -> bool:
         # type(x) return the metaclass of the class (whatever the inheritance level)
         # so type(x) is either Component or something else in our case
         if type(clazz) is Component:
@@ -100,18 +101,25 @@ class _Autowire:
 
         all_args_name = [i[0] for i in flattened_args]
 
-        len_all_args = len(all_args_name)
-        len_set_args = len(set(all_args_name))
-        if len_set_args != len_all_args:
-            raise MultipleAutowireReference("One argument is referenced multiple times in autowire.")
+        duplicate_args = [name for name, times in self._count_name_occurrence(all_args_name).items() if times > 1]
+        if len(duplicate_args) > 0:
+            raise MultipleAutowireReference(f"The following arguments are referenced multiple times in autowire: {', '.join(duplicate_args)}")
 
         annotated_elements = [i[0] for i in self._autowire_candidates]
         not_annotated_elements_in_explicit_autowire = [i for i in all_args_name if i not in annotated_elements]
         if len(not_annotated_elements_in_explicit_autowire) > 0:
-            raise AnnotatedDeclarationMissing("Element to autowire should be defined and annotated at class level.")
+            raise AnnotatedDeclarationMissing(f"Elements to autowire '{', '.join(not_annotated_elements_in_explicit_autowire)}'"
+                                              f" should be defined and annotated at class level.")
 
         all_autowire_candidate = {i[0]:i[1] for i in self._autowire_candidates}
         self._autowire_non_default_candidates = [(i[0], i[1], all_autowire_candidate[i[0]]) for i in flattened_args]
+
+    @staticmethod
+    def _count_name_occurrence(names: list) -> dict:
+        occurrences = {name: 0 for name in set(names)}
+        for name in names:
+            occurrences[name] = occurrences[name] + 1
+        return occurrences
 
     def _infer_autowire_default_candidates(self):
         non_default = [i[0] for i in self._autowire_non_default_candidates]
