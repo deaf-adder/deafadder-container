@@ -76,7 +76,8 @@ class _Autowire:
         self._infer_autowire_default_candidates()
         self.autowire_triplet_candidates = [*self._autowire_default_candidates, *self._autowire_non_default_candidates]
 
-    def _is_component(self, clazz) -> bool:
+    @staticmethod
+    def _is_component(clazz) -> bool:
         # type(x) return the metaclass of the class (whatever the inheritance level)
         # so type(x) is either Component or something else in our case
         if type(clazz) is Component:
