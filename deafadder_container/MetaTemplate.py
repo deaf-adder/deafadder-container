@@ -14,6 +14,8 @@ class _NamedInstance:
     name: str
     instance: Any
 
+class _Anchor(metaclass=Component):
+    pass
 
 class Component(type):
     _instances: Dict[Any, List[_NamedInstance]] = {}
@@ -25,7 +27,7 @@ class Component(type):
                 cls._instances[cls] = []
             if instance_name not in cls._known_instance_name_for_class():
                 new_instance = super().__call__(*args, **kwargs)
-                auto = _Autowire(new_instance)
+                auto = _AutowireMechanism(new_instance)
                 for autowire_candidate in auto.autowire_triplet_candidates:
                     setattr(new_instance, autowire_candidate[0], Component.get(autowire_candidate[2], autowire_candidate[1]))
                 cls._instances[cls].append(_NamedInstance(name=instance_name, instance=new_instance))
@@ -50,6 +52,14 @@ class Component(type):
             if cls in cls._instances:
                 cls._instances.pop(cls)
 
+    @staticmethod
+    def purge():
+        Component._purge(_Anchor)
+
+    def _purge(cls):
+        with cls._lock:
+            cls._instances = {}
+
     def _known_instance_name_for_class(cls) -> List[str]:
         return [i.name for i in cls._instances[cls]]
 
@@ -57,7 +67,7 @@ class Component(type):
         return next(filter(lambda i: i.name == instance_name, cls._instances[cls]))
 
 
-class _Autowire:
+class _AutowireMechanism:
     autowire_triplet_candidates = []
     _autowire_candidates = []
     _autowire_non_default_candidates = []
