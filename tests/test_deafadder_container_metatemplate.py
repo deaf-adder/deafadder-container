@@ -1,7 +1,7 @@
 import pytest
 
 from deafadder_container.ContainerException import InstanceNotFound
-from deafadder_container.MetaTemplate import Component
+from deafadder_container.MetaTemplate import Component, _Anchor
 
 from .deafadder_container_metatemplate_test_helper import _FirstDummyClassForTest, \
     _SecondDummyClassForTest, _InheritedComponentWithMetaclass, _InheritedComponentWithoutMetaclass
@@ -240,3 +240,30 @@ def test_delete_all_instance_of_same_class():
         _ = Component.get(_FirstDummyClassForTest, instance_name="second")
     assert type(fourth_raised.value) is InstanceNotFound
     assert str(fourth_raised.value) == instance_not_found_message(_FirstDummyClassForTest, "second")
+
+
+def test_delete_all():
+    instance1 = _FirstDummyClassForTest()
+    instance2 = _FirstDummyClassForTest(instance_name="second")
+    instance3 = _SecondDummyClassForTest()
+
+    assert instance1 is not None
+    assert instance2 is not None
+    assert instance3 is not None
+
+    Component.purge()
+
+    with pytest.raises(InstanceNotFound) as first_raised:
+        _ = _FirstDummyClassForTest.get()
+    assert type(first_raised.value) is InstanceNotFound
+    assert str(first_raised.value) == instance_not_found_message(_FirstDummyClassForTest)
+
+    with pytest.raises(InstanceNotFound) as second_raised:
+        _ = _FirstDummyClassForTest.get(instance_name="second")
+    assert type(second_raised.value) is InstanceNotFound
+    assert str(second_raised.value) == instance_not_found_message(_FirstDummyClassForTest, name="second")
+
+    with pytest.raises(InstanceNotFound) as third_raised:
+        _ = _SecondDummyClassForTest.get()
+    assert type(third_raised.value) is InstanceNotFound
+    assert str(third_raised.value) == instance_not_found_message(_SecondDummyClassForTest)
