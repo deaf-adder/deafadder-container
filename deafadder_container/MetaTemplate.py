@@ -14,8 +14,6 @@ class _NamedInstance:
     name: str
     instance: Any
 
-class _Anchor(metaclass=Component):
-    pass
 
 class Component(type):
     _instances: Dict[Any, List[_NamedInstance]] = {}
@@ -58,13 +56,20 @@ class Component(type):
 
     def _purge(cls):
         with cls._lock:
-            cls._instances = {}
+            keys = [k for k,v in cls._instances.items()]
+            for k in keys:
+                cls._instances.pop(k)
 
     def _known_instance_name_for_class(cls) -> List[str]:
         return [i.name for i in cls._instances[cls]]
 
     def _get_entry_for_name(cls, instance_name) -> _NamedInstance:
         return next(filter(lambda i: i.name == instance_name, cls._instances[cls]))
+
+
+class _Anchor(metaclass=Component):
+    """This is a dummy class only to enable a purge behavior on Component"""
+    pass
 
 
 class _AutowireMechanism:
