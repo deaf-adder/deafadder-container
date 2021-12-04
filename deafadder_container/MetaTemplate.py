@@ -1,3 +1,6 @@
+import inspect
+import ast
+
 from dataclasses import dataclass
 from threading import Lock
 from typing import Any, Dict, List
@@ -5,8 +8,6 @@ from deafadder_container.ContainerException import InstanceNotFound, MultipleAut
     AnnotatedDeclarationMissing
 
 DEFAULT_INSTANCE_NAME = "default"
-import inspect
-import ast
 
 
 @dataclass
@@ -27,7 +28,10 @@ class Component(type):
                 new_instance = super().__call__(*args, **kwargs)
                 auto = _AutowireMechanism(new_instance)
                 for autowire_candidate in auto.autowire_triplet_candidates:
-                    setattr(new_instance, autowire_candidate[0], Component.get(autowire_candidate[2], autowire_candidate[1]))
+                    setattr(new_instance,
+                            autowire_candidate.attribute_name,
+                            Component.get(autowire_candidate.component_class,
+                                          autowire_candidate.component_instance_name))
                 cls._instances[cls].append(_NamedInstance(name=instance_name, instance=new_instance))
         container_entry = cls._get_entry_for_name(instance_name)
         return container_entry.instance
@@ -72,11 +76,18 @@ class _Anchor(metaclass=Component):
     pass
 
 
+@dataclass
+class AutowireCandidate:
+    attribute_name: str
+    component_instance_name: str
+    component_class: Any
+
+
 class _AutowireMechanism:
-    autowire_triplet_candidates = []
+    autowire_triplet_candidates: List[AutowireCandidate] = []
     _autowire_candidates = []
-    _autowire_non_default_candidates = []
-    _autowire_default_candidates = []
+    _autowire_non_default_candidates: List[AutowireCandidate] = []
+    _autowire_default_candidates: List[AutowireCandidate] = []
     _instance = None
 
     def __init__(self, instance):
@@ -126,8 +137,13 @@ class _AutowireMechanism:
             raise AnnotatedDeclarationMissing(f"Elements to autowire '{', '.join(not_annotated_elements_in_explicit_autowire)}'"
                                               f" should be defined and annotated at class level.")
 
-        all_autowire_candidate = {i[0]:i[1] for i in self._autowire_candidates}
-        self._autowire_non_default_candidates = [(i[0], i[1], all_autowire_candidate[i[0]]) for i in flattened_args]
+        all_autowire_candidate = {i[0]: i[1] for i in self._autowire_candidates}
+        self._autowire_non_default_candidates = [
+            AutowireCandidate(attribute_name=i[0],
+                              component_instance_name=i[1],
+                              component_class=all_autowire_candidate[i[0]])
+            for i in flattened_args
+        ]
 
     @staticmethod
     def _count_name_occurrence(names: list) -> dict:
@@ -137,11 +153,16 @@ class _AutowireMechanism:
         return occurrences
 
     def _infer_autowire_default_candidates(self):
-        non_default = [i[0] for i in self._autowire_non_default_candidates]
+        non_default = [i.attribute_name for i in self._autowire_non_default_candidates]
         all_candidates = [i[0] for i in self._autowire_candidates]
         default_candidates = set(all_candidates) - set(non_default)
-        all_candidates_a_dict = {i[0]:i[1] for i in self._autowire_candidates}
-        self._autowire_default_candidates = [(i, DEFAULT_INSTANCE_NAME, all_candidates_a_dict[i]) for i in default_candidates]
+        all_candidates_as_dict = {i[0]:  i[1] for i in self._autowire_candidates}
+        self._autowire_default_candidates = [
+            AutowireCandidate(attribute_name=i,
+                              component_instance_name=DEFAULT_INSTANCE_NAME,
+                              component_class=all_candidates_as_dict[i])
+            for i in default_candidates
+        ]
 
 
 def _get_init_decorators(cls):
