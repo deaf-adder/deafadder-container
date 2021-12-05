@@ -27,26 +27,33 @@ class Component(type):
 
     def __call__(cls, instance_name: str = DEFAULT_INSTANCE_NAME, *args, **kwargs):
         with cls._lock:
+
             if cls not in cls._instances:
-                log.debug(f"(__call__) Component {cls} not present, initializing the entry in the instance record.")
+                log.debug(f"(__call__ {cls}, {instance_name}) Component not present, initializing the entry in the instance record.")
                 cls._instances[cls] = []
+
             if instance_name not in cls._known_instance_name_for_class():
-                log.debug(f"(__call__) No instance with name '{instance_name}' found for the Component {cls}. Creating it...")
+                log.debug(f"(__call__ {cls}, {instance_name}) No instance with name '{instance_name}' found for the Component. Creating it...")
                 new_instance = super().__call__(*args, **kwargs)
 
-                log.debug(f"(__call__) Injecting dependencies for {cls} with name '{instance_name}':")
                 auto = _AutowireMechanism(new_instance)
+                if auto.autowire_triplet_candidates:
+                    log.debug(f"(__call__ {cls}, {instance_name}) Injecting dependencies:")
+                else:
+                    log.debug(f"(__call__ {cls}, {instance_name}) Nothing to inject")
                 for autowire_candidate in auto.autowire_triplet_candidates:
-                    log.debug(f"(__call__) Injecting the dependency {autowire_candidate.component_class} "
+                    log.debug(f"(__call__ {cls}, {instance_name})      Injecting the dependency {autowire_candidate.component_class} "
                               f"with name '{autowire_candidate.component_instance_name}' in the field '{autowire_candidate.attribute_name}'")
                     setattr(new_instance,
                             autowire_candidate.attribute_name,
                             Component.get(autowire_candidate.component_class,
                                           autowire_candidate.component_instance_name))
-                log.debug(f"(__call__) Dependency injection finished for {cls} with name '{instance_name}'")
+                if auto.autowire_triplet_candidates:
+                    log.debug(f"(__call__ {cls}, {instance_name}) Dependency injection finished")
+
                 cls._instances[cls].append(_NamedInstance(name=instance_name, instance=new_instance))
         container_entry = cls._get_entry_for_name(instance_name)
-        log.debug(f"(__call__) Instance found: {container_entry.instance.__class__} with name '{container_entry.name}'.")
+        log.debug(f"(__call__ {cls}, {instance_name}) Instance found.")
         return container_entry.instance
 
     def get(cls, instance_name: str = DEFAULT_INSTANCE_NAME):
@@ -70,7 +77,7 @@ class Component(type):
         :raises: InstanceNotFound exception if there is no instance of the given class with the given name
         """
         if cls in cls._instances and instance_name in cls._known_instance_name_for_class():
-            log.debug(f"(get) Instance found for {cls} with name '{instance_name}'")
+            log.debug(f"(get {cls}, {instance_name}) Instance found")
             return cls._get_entry_for_name(instance_name).instance
         else:
             raise InstanceNotFound(f"Unable to find an instance for {cls} with name '{instance_name}'")
@@ -103,7 +110,7 @@ class Component(type):
         """
         with cls._lock:
             if cls in cls._instances and instance_name in cls._known_instance_name_for_class():
-                log.debug(f"(delete) Deleting instance for {cls} with name '{instance_name}'")
+                log.debug(f"(delete {cls}, {instance_name}) Deleting instance")
                 cls._instances[cls] = list(filter(lambda i: i.name != instance_name, cls._instances[cls]))
             else:
                 raise InstanceNotFound(f"Unable to find an instance for {cls} with name '{instance_name}'")

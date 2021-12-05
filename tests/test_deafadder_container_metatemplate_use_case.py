@@ -1,4 +1,5 @@
 import pytest
+import logging
 
 from deafadder_container.MetaTemplate import Component
 
@@ -47,3 +48,28 @@ def test_intricate_composition(first_dummy_component):
     # Clean up
     Component.delete(_CompositeDummyClassForTest)
     Component.delete(_CompositeDummyClass2ForTest)
+
+
+def test_logging(caplog):
+    Component.purge()
+
+    with caplog.at_level(logging.DEBUG):
+        _ = _FirstDummyClassForTest()
+        assert len(caplog.records) == 4
+
+        expected_message = [
+            "(__call__ <class 'tests.deafadder_container_metatemplate_test_helper._FirstDummyClassForTest'>, default) Component not present, "
+            "initializing the entry in the instance record.",
+
+            "(__call__ <class 'tests.deafadder_container_metatemplate_test_helper._FirstDummyClassForTest'>, default) No instance with name "
+            "'default' found for the Component. Creating it...",
+
+            "(__call__ <class 'tests.deafadder_container_metatemplate_test_helper._FirstDummyClassForTest'>, default) Nothing to inject",
+
+            "(__call__ <class 'tests.deafadder_container_metatemplate_test_helper._FirstDummyClassForTest'>, default) Instance found."
+        ]
+
+        for record, expected in zip(caplog.records, expected_message):
+            assert record.message == expected
+
+    Component.delete_all(_FirstDummyClassForTest)
