@@ -226,6 +226,12 @@ class _AutowireMechanism:
         self._infer_autowire_default_candidates()
         self.autowire_triplet_candidates = [*self._autowire_default_candidates, *self._autowire_non_default_candidates]
 
+    def _infer_autowire_candidates(self):
+        annotations = self._instance.__annotations__
+        self._autowire_candidates = [(k, annotations[k]) for (k, v) in annotations.items()
+                                     if not hasattr(self._instance, k)
+                                     and self._is_component(v)]
+
     @staticmethod
     def _is_component(clazz) -> bool:
         # type(x) return the metaclass of the class (whatever the inheritance level)
@@ -235,14 +241,39 @@ class _AutowireMechanism:
         else:
             return False
 
-    def _infer_autowire_candidates(self):
-        annotations = self._instance.__annotations__
-        self._autowire_candidates = [(k, annotations[k]) for (k, v) in annotations.items()
-                                     if not hasattr(self._instance, k)
-                                     and self._is_component(v)]
+    @staticmethod
+    def _get_init_decorators(cls):
+        """Parse the AST to retrieve all decorator on the __init__ method for a given class"""
+        target = cls
+        init_decorators = {}
+
+        def visit_function_def(node):
+            if node.name != "__init__":
+                return
+            for n in node.decorator_list:
+                decorator_args = []
+                name = ''
+                if isinstance(n, ast.Call):
+                    name = n.func.attr if isinstance(n.func, ast.Attribute) else n.func.id
+                    decorator_args = [(decorator_arg.arg, decorator_arg.value.value) for decorator_arg in n.keywords]
+                # to be complete, the decorator without parenthesis should be included. But since we
+                # don't really need it, we can ignore it for now
+                #
+                # Sample code to be complete
+                # > else:
+                # >    name = n.attr if isinstance(n, ast.Attribute) else n.id
+
+                if name not in init_decorators:
+                    init_decorators[name] = []
+                init_decorators[name].append(decorator_args)
+
+        node_iter = ast.NodeVisitor()
+        node_iter.visit_FunctionDef = visit_function_def
+        node_iter.visit(ast.parse(inspect.getsource(target)))
+        return init_decorators
 
     def _infer_explicit_autowire_candidates(self):
-        init_decorators = _get_init_decorators(self._instance.__class__)
+        init_decorators = self._get_init_decorators(self._instance.__class__)
         if not init_decorators:
             self._autowire_non_default_candidates = []
             return
@@ -294,32 +325,3 @@ class _AutowireMechanism:
         ]
 
 
-def _get_init_decorators(cls):
-    """Parse the AST to retrieve all decorator on the __init__ method for a given class"""
-    target = cls
-    init_decorators = {}
-
-    def visit_function_def(node):
-        if node.name != "__init__":
-            return
-        for n in node.decorator_list:
-            decorator_args = []
-            name = ''
-            if isinstance(n, ast.Call):
-                name = n.func.attr if isinstance(n.func, ast.Attribute) else n.func.id
-                decorator_args = [(decorator_arg.arg, decorator_arg.value.value) for decorator_arg in n.keywords]
-            # to be complete, the decorator without parenthesis should be included. But since we
-            # don't really need it, we can ignore it for now
-            #
-            # Sample code to be complete
-            # > else:
-            # >    name = n.attr if isinstance(n, ast.Attribute) else n.id
-
-            if name not in init_decorators:
-                init_decorators[name] = []
-            init_decorators[name].append(decorator_args)
-
-    node_iter = ast.NodeVisitor()
-    node_iter.visit_FunctionDef = visit_function_def
-    node_iter.visit(ast.parse(inspect.getsource(target)))
-    return init_decorators
