@@ -267,3 +267,21 @@ def test_delete_all():
         _ = _SecondDummyClassForTest.get()
     assert type(third_raised.value) is InstanceNotFound
     assert str(third_raised.value) == instance_not_found_message(_SecondDummyClassForTest)
+
+
+def test_delete_all_when_nothing_to_delete():
+    _ = _FirstDummyClassForTest()
+    # the first delete works because there are exising instances
+    Component.delete_all(_FirstDummyClassForTest)
+
+    # The second delete works as well since we don't raise error when deleting Component with no instances
+    Component.delete_all(_FirstDummyClassForTest)
+
+    with pytest.raises(InstanceNotFound) as raised:
+        _ = _FirstDummyClassForTest.get()
+
+    assert type(raised.value) is InstanceNotFound
+    assert str(raised.value) == instance_not_found_message(_FirstDummyClassForTest)
+
+
+
