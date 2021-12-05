@@ -64,7 +64,8 @@ def test_logging(caplog):
             "(__call__ <class 'tests.deafadder_container_metatemplate_test_helper._FirstDummyClassForTest'>, default) No instance with name "
             "'default' found for the Component. Creating it...",
 
-            "(__call__ <class 'tests.deafadder_container_metatemplate_test_helper._FirstDummyClassForTest'>, default) Nothing to inject",
+            "(_AutowireMechanism.apply <class 'tests.deafadder_container_metatemplate_test_helper._FirstDummyClassForTest'>, default) "
+            "Nothing to inject",
 
             "(__call__ <class 'tests.deafadder_container_metatemplate_test_helper._FirstDummyClassForTest'>, default) Instance found."
         ]

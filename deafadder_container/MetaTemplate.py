@@ -36,20 +36,9 @@ class Component(type):
                 log.debug(f"(__call__ {cls}, {instance_name}) No instance with name '{instance_name}' found for the Component. Creating it...")
                 new_instance = super().__call__(*args, **kwargs)
 
-                auto = _AutowireMechanism(new_instance)
-                if auto.autowire_triplet_candidates:
-                    log.debug(f"(__call__ {cls}, {instance_name}) Injecting dependencies:")
-                else:
-                    log.debug(f"(__call__ {cls}, {instance_name}) Nothing to inject")
-                for autowire_candidate in auto.autowire_triplet_candidates:
-                    log.debug(f"(__call__ {cls}, {instance_name})      Injecting the dependency {autowire_candidate.component_class} "
-                              f"with name '{autowire_candidate.component_instance_name}' in the field '{autowire_candidate.attribute_name}'")
-                    setattr(new_instance,
-                            autowire_candidate.attribute_name,
-                            Component.get(autowire_candidate.component_class,
-                                          autowire_candidate.component_instance_name))
-                if auto.autowire_triplet_candidates:
-                    log.debug(f"(__call__ {cls}, {instance_name}) Dependency injection finished")
+                _AutowireMechanism(new_instance, cls, instance_name).apply()
+
+                _apply_post_init(new_instance)
 
                 cls._instances[cls].append(_NamedInstance(name=instance_name, instance=new_instance))
         container_entry = cls._get_entry_for_name(instance_name)
@@ -213,18 +202,47 @@ class _AutowireMechanism:
     _autowire_non_default_candidates: List[_AutowireCandidate] = []
     _autowire_default_candidates: List[_AutowireCandidate] = []
     _instance = None
+    _cls = None
+    _instance_name = None
 
-    def __init__(self, instance):
+    def __init__(self, instance, cls, instance_name):
         try:
             instance.__annotations__
         except AttributeError:
             return
 
         self._instance = instance
+        self._cls = cls
+        self._instance_name = instance_name
+
         self._infer_autowire_candidates()
         self._infer_explicit_autowire_candidates()
         self._infer_autowire_default_candidates()
         self.autowire_triplet_candidates = [*self._autowire_default_candidates, *self._autowire_non_default_candidates]
+
+    def apply(self):
+        """Apply auto wire mechanism on the given instance.
+
+        After init of this class, if any filed need to be injected using the auto wire mechanism,
+        this method inject the correct instance into all those field that requires automatic injection
+        of Component.
+
+        :return: None
+        """
+        if self.autowire_triplet_candidates:
+            log.debug(f"(_AutowireMechanism.apply {self._cls}, {self._instance_name}) Injecting dependencies:")
+        else:
+            log.debug(f"(_AutowireMechanism.apply {self._cls}, {self._instance_name}) Nothing to inject")
+        for autowire_candidate in self.autowire_triplet_candidates:
+            log.debug(f"(_AutowireMechanism.apply {self._cls}, {self._instance_name})      Injecting the dependency "
+                      f"{autowire_candidate.component_class} with name '{autowire_candidate.component_instance_name}' "
+                      f"in the field '{autowire_candidate.attribute_name}'")
+            setattr(self._instance,
+                    autowire_candidate.attribute_name,
+                    Component.get(autowire_candidate.component_class,
+                                  autowire_candidate.component_instance_name))
+        if self.autowire_triplet_candidates:
+            log.debug(f"(_AutowireMechanism.apply {self._cls}, {self._instance_name}) Dependency injection finished")
 
     def _infer_autowire_candidates(self):
         annotations = self._instance.__annotations__
@@ -325,3 +343,7 @@ class _AutowireMechanism:
         ]
 
 
+def _apply_post_init(instance):
+    post_init = getattr(instance, "_post_init", None)
+    if callable(post_init):
+        instance._post_init()
