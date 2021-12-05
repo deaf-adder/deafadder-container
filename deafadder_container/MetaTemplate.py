@@ -1,5 +1,6 @@
 import inspect
 import ast
+import logging
 
 from dataclasses import dataclass
 from threading import Lock
@@ -8,6 +9,9 @@ from deafadder_container.ContainerException import InstanceNotFound, MultipleAut
     AnnotatedDeclarationMissing
 
 DEFAULT_INSTANCE_NAME = "default"
+
+log = logging.getLogger(__name__)
+log.addHandler(logging.NullHandler())
 
 
 @dataclass
@@ -23,18 +27,33 @@ class Component(type):
 
     def __call__(cls, instance_name: str = DEFAULT_INSTANCE_NAME, *args, **kwargs):
         with cls._lock:
+
             if cls not in cls._instances:
+                log.debug(f"(__call__ {cls}, {instance_name}) Component not present, initializing the entry in the instance record.")
                 cls._instances[cls] = []
+
             if instance_name not in cls._known_instance_name_for_class():
+                log.debug(f"(__call__ {cls}, {instance_name}) No instance with name '{instance_name}' found for the Component. Creating it...")
                 new_instance = super().__call__(*args, **kwargs)
+
                 auto = _AutowireMechanism(new_instance)
+                if auto.autowire_triplet_candidates:
+                    log.debug(f"(__call__ {cls}, {instance_name}) Injecting dependencies:")
+                else:
+                    log.debug(f"(__call__ {cls}, {instance_name}) Nothing to inject")
                 for autowire_candidate in auto.autowire_triplet_candidates:
+                    log.debug(f"(__call__ {cls}, {instance_name})      Injecting the dependency {autowire_candidate.component_class} "
+                              f"with name '{autowire_candidate.component_instance_name}' in the field '{autowire_candidate.attribute_name}'")
                     setattr(new_instance,
                             autowire_candidate.attribute_name,
                             Component.get(autowire_candidate.component_class,
                                           autowire_candidate.component_instance_name))
+                if auto.autowire_triplet_candidates:
+                    log.debug(f"(__call__ {cls}, {instance_name}) Dependency injection finished")
+
                 cls._instances[cls].append(_NamedInstance(name=instance_name, instance=new_instance))
         container_entry = cls._get_entry_for_name(instance_name)
+        log.debug(f"(__call__ {cls}, {instance_name}) Instance found.")
         return container_entry.instance
 
     def get(cls, instance_name: str = DEFAULT_INSTANCE_NAME):
@@ -58,6 +77,7 @@ class Component(type):
         :raises: InstanceNotFound exception if there is no instance of the given class with the given name
         """
         if cls in cls._instances and instance_name in cls._known_instance_name_for_class():
+            log.debug(f"(get {cls}, {instance_name}) Instance found")
             return cls._get_entry_for_name(instance_name).instance
         else:
             raise InstanceNotFound(f"Unable to find an instance for {cls} with name '{instance_name}'")
@@ -90,6 +110,7 @@ class Component(type):
         """
         with cls._lock:
             if cls in cls._instances and instance_name in cls._known_instance_name_for_class():
+                log.debug(f"(delete {cls}, {instance_name}) Deleting instance")
                 cls._instances[cls] = list(filter(lambda i: i.name != instance_name, cls._instances[cls]))
             else:
                 raise InstanceNotFound(f"Unable to find an instance for {cls} with name '{instance_name}'")
@@ -120,7 +141,10 @@ class Component(type):
         """
         with cls._lock:
             if cls in cls._instances:
+                log.debug(f"(delete_all) Deleting all entries for {cls}. Entries deleted: {cls._instances[cls]}")
                 cls._instances.pop(cls)
+            else:
+                log.debug(f"(delete_all) Nothing to do. No instance found for class {cls}")
 
     @staticmethod
     def purge():
@@ -145,6 +169,7 @@ class Component(type):
         """
         with cls._lock:
             keys = [k for k,v in cls._instances.items()]
+            log.debug(f"(purge) Deleting all instances for the following Component: {keys}")
             for k in keys:
                 cls._instances.pop(k)
 
