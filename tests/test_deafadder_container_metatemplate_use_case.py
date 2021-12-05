@@ -4,7 +4,7 @@ import logging
 from deafadder_container.MetaTemplate import Component
 
 from .deafadder_container_metatemplate_test_helper import _FirstDummyClassForTest, _CompositeDummyClassForTest, \
-    _CompositeDummyClass2ForTest
+    _CompositeDummyClass2ForTest, _CompositeDummyClass3ForTest
 
 
 @pytest.fixture
@@ -64,7 +64,8 @@ def test_logging(caplog):
             "(__call__ <class 'tests.deafadder_container_metatemplate_test_helper._FirstDummyClassForTest'>, default) No instance with name "
             "'default' found for the Component. Creating it...",
 
-            "(__call__ <class 'tests.deafadder_container_metatemplate_test_helper._FirstDummyClassForTest'>, default) Nothing to inject",
+            "(_AutowireMechanism.apply <class 'tests.deafadder_container_metatemplate_test_helper._FirstDummyClassForTest'>, default) "
+            "Nothing to inject",
 
             "(__call__ <class 'tests.deafadder_container_metatemplate_test_helper._FirstDummyClassForTest'>, default) Instance found."
         ]
@@ -73,3 +74,16 @@ def test_logging(caplog):
             assert record.message == expected
 
     Component.delete_all(_FirstDummyClassForTest)
+
+
+def test_post_init(first_dummy_component):
+    instance = _CompositeDummyClass3ForTest()
+
+    assert instance.counter == 1
+    assert first_dummy_component.counter == 1
+    first_dummy_component.increment()
+
+    assert instance.counter == 1
+    assert first_dummy_component.counter == 2
+
+    Component.delete_all(_CompositeDummyClass3ForTest)
