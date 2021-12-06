@@ -1,7 +1,7 @@
 import pytest
 
 from deafadder_container.ContainerException import InstanceNotFound
-from deafadder_container.MetaTemplate import Component, _Anchor
+from deafadder_container.MetaTemplate import Component, _Anchor, Scope
 
 from .deafadder_container_metatemplate_test_helper import _FirstDummyClassForTest, \
     _SecondDummyClassForTest, _InheritedComponentWithMetaclass, _InheritedComponentWithoutMetaclass
@@ -284,4 +284,14 @@ def test_delete_all_when_nothing_to_delete():
     assert str(raised.value) == instance_not_found_message(_FirstDummyClassForTest)
 
 
+def test_prototype_creation():
+    prototype = _FirstDummyClassForTest(scope=Scope.PROTOTYPE)
+    singleton = _FirstDummyClassForTest(scope=Scope.SINGLETON)
+
+    assert prototype is not singleton
+    prototype.increment()
+    assert prototype.counter == 1
+    assert singleton.counter == 0
+
+    Component.purge()
 
