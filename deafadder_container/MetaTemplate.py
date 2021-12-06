@@ -2,6 +2,7 @@ import inspect
 import ast
 import logging
 
+from enum import auto, Enum
 from dataclasses import dataclass
 from threading import Lock
 from typing import Any, Dict, List
@@ -12,6 +13,11 @@ DEFAULT_INSTANCE_NAME = "default"
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
+
+
+class Scope(Enum):
+    SINGLETON = auto()
+    PROTOTYPE = auto()
 
 
 @dataclass
@@ -25,7 +31,13 @@ class Component(type):
     _instances: Dict[Any, List[_NamedInstance]] = {}
     _lock: Lock = Lock()
 
-    def __call__(cls, instance_name: str = DEFAULT_INSTANCE_NAME, *args, **kwargs):
+    def __call__(cls, instance_name: str = DEFAULT_INSTANCE_NAME, scope: Scope = Scope.SINGLETON, *args, **kwargs):
+        if scope == Scope.SINGLETON:
+            return cls._singleton_scope_handler(instance_name, *args, **kwargs)
+        elif scope == Scope.PROTOTYPE:
+            return cls._prototype_scope_handler(*args, **kwargs)
+
+    def _singleton_scope_handler(cls, instance_name: str, *args, **kwargs):
         with cls._lock:
 
             if cls not in cls._instances:
@@ -44,6 +56,13 @@ class Component(type):
         container_entry = cls._get_entry_for_name(instance_name)
         log.debug(f"(__call__ {cls}, {instance_name}) Instance found.")
         return container_entry.instance
+
+    def _prototype_scope_handler(cls, *args, **kwargs):
+        with cls._lock:
+            new_instance = super().__call__(*args, **kwargs)
+            _AutowireMechanism(new_instance, cls, "<prototype>")
+            _apply_post_init(new_instance)
+        return new_instance
 
     def get(cls, instance_name: str = DEFAULT_INSTANCE_NAME):
         """Retrieve a Component based on its class and name
