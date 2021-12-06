@@ -1,7 +1,8 @@
 import pytest
 import logging
 
-from deafadder_container.MetaTemplate import Component
+from deafadder_container.ContainerException import InstanceNotFound
+from deafadder_container.MetaTemplate import Component, Scope
 
 from .deafadder_container_metatemplate_test_helper import _FirstDummyClassForTest, _CompositeDummyClassForTest, \
     _CompositeDummyClass2ForTest, _CompositeDummyClass3ForTest
@@ -31,6 +32,17 @@ def test_simple_composition(first_dummy_component):
 
     # Clean up
     Component.delete(_CompositeDummyClassForTest)
+
+
+def test_simple_composition_fails_with_prototype_reference():
+    _ = _FirstDummyClassForTest(scope=Scope.PROTOTYPE)
+    with pytest.raises(InstanceNotFound) as raised:
+        service = _CompositeDummyClassForTest()
+
+    assert type(raised.value) is InstanceNotFound
+    assert str(raised.value) == "Unable to find an instance for " \
+                                "<class 'tests.deafadder_container_metatemplate_test_helper._FirstDummyClassForTest'> " \
+                                "with name 'default'"
 
 
 def test_intricate_composition(first_dummy_component):

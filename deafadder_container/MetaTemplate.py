@@ -2,6 +2,7 @@ import inspect
 import ast
 import logging
 
+from enum import auto, Enum
 from dataclasses import dataclass
 from threading import Lock
 from typing import Any, Dict, List
@@ -12,6 +13,19 @@ DEFAULT_INSTANCE_NAME = "default"
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
+
+
+class Scope(Enum):
+    """A Scope define hte type of Component that should be created.
+
+    - SINGLETON means that the Component should be treated as a singleton (with different name possible) and should be
+    retrievable.
+
+    - PROTOTYPE means that the Component should not be a singleton, a new instance will be created each time we call
+    the class init. However it is still treated as Component capable of autowiring and post initialization.
+    """
+    SINGLETON = auto()
+    PROTOTYPE = auto()
 
 
 @dataclass
@@ -25,7 +39,24 @@ class Component(type):
     _instances: Dict[Any, List[_NamedInstance]] = {}
     _lock: Lock = Lock()
 
-    def __call__(cls, instance_name: str = DEFAULT_INSTANCE_NAME, *args, **kwargs):
+    def __call__(cls, instance_name: str = DEFAULT_INSTANCE_NAME, scope: Scope = Scope.SINGLETON, *args, **kwargs):
+        if scope == Scope.SINGLETON:
+            return cls._singleton_scope_handler(instance_name, *args, **kwargs)
+        elif scope == Scope.PROTOTYPE:
+            return cls._prototype_scope_handler(*args, **kwargs)
+
+    def _singleton_scope_handler(cls, instance_name: str, *args, **kwargs):
+        """Create or retrieve the correct Singleton for the given class.
+
+        For creation, perform autowiring when needed and post initialization when the _post_init method is
+        available. It will then register the new instance in the collection of available instances so that
+        it can be retrieved later when needed.
+
+        :param instance_name: default value is 'default'. The name of the instance so it can be retrieved later
+        :param args: the args of the __init__ method
+        :param kwargs: the kwargs of the __init__ method
+        :return: a new instance of the given class or an already existing instance
+        """
         with cls._lock:
 
             if cls not in cls._instances:
@@ -44,6 +75,22 @@ class Component(type):
         container_entry = cls._get_entry_for_name(instance_name)
         log.debug(f"(__call__ {cls}, {instance_name}) Instance found.")
         return container_entry.instance
+
+    def _prototype_scope_handler(cls, *args, **kwargs):
+        """Always create a new instance of the given class.
+
+        Does not register the new instance for future reference and access but still perform autowiring and
+        post initialization of the Component.
+
+        :param args: the args of the __init__ method
+        :param kwargs: the kwargs of the __init__ method
+        :return: a new instance of the given class
+        """
+        with cls._lock:
+            new_instance = super().__call__(*args, **kwargs)
+            _AutowireMechanism(new_instance, cls, "<prototype>")
+            _apply_post_init(new_instance)
+        return new_instance
 
     def get(cls, instance_name: str = DEFAULT_INSTANCE_NAME):
         """Retrieve a Component based on its class and name
