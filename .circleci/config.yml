@@ -123,8 +123,8 @@ jobs:
       - checkout
       - run: |
           poetry build --format wheel
-          poetry config repositories.deaf-adder-pypi $MY_CIRCLECI_ARTIFACTORY_DEAF_ADDER_REPO
-          poetry config http-basic.deaf-adder-pypi $MY_CIRCLECI_ARTIFACTORY_USERNAME $MY_CIRCLECI_ARTIFACTORY_PASSWORD
+          poetry config repositories.deaf-adder-pypi $LEDDZIP_ARTIFACTORY_DEAF_ADDER_REPO
+          poetry config http-basic.deaf-adder-pypi $ALBERT_BOT_ARTIFACTORY_USERNAME $ALBERT_BOT_ARTIFACTORY_PASSWORD
           poetry publish --repository deaf-adder-pypi
   check-version:
     executor: standart-bash
