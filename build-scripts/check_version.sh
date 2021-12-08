@@ -1,9 +1,11 @@
 set -e
 
-#===============================
+#==========================================================
 # This scripts is use to assert the version
 # has a valid format and consistent across
 # all main files
+#
+#==========================================================
 
 init_version=$(grep "__version__" deafadder_container/__init__.py | cut -d = -f 2 | cut -d\' -f 2)
 poetry_version=$(grep -o "^version = \"[0-9\.a-zA-Z_-]*\"$" pyproject.toml | cut -d = -f 2 | cut -d \" -f 2)
