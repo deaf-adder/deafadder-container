@@ -112,4 +112,3 @@ class _CompositeDummyClass3ForTest(metaclass=Component):
     def _post_init(self):
         self.base_service.increment()
         self.counter = self.base_service.counter
-

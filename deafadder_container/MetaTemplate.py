@@ -204,7 +204,7 @@ class Component(type):
         class level attribute.
         """
         with cls._lock:
-            keys = [k for k,v in cls._instances.items()]
+            keys = [k for k, v in cls._instances.items()]
             log.debug(f"(purge) Deleting all instances for the following Component: {keys}")
             for k in keys:
                 cls._instances.pop(k)
@@ -381,7 +381,7 @@ class _AutowireMechanism:
         non_default = [i.attribute_name for i in self._autowire_non_default_candidates]
         all_candidates = [i[0] for i in self._autowire_candidates]
         default_candidates = set(all_candidates) - set(non_default)
-        all_candidates_as_dict = {i[0]:  i[1] for i in self._autowire_candidates}
+        all_candidates_as_dict = {i[0]: i[1] for i in self._autowire_candidates}
         self._autowire_default_candidates = [
             _AutowireCandidate(attribute_name=i,
                                component_instance_name=DEFAULT_INSTANCE_NAME,
