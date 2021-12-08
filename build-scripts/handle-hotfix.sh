@@ -1,5 +1,16 @@
 set -eu
 
+#===============================
+# In case of a hotfix merge into master,
+# this script will increment the bugfix version
+# in all version reference in the project,
+# then tag with the newly updated version and
+# push it into github.
+#
+# Another pipeline is then triggered on our CI/CD tool
+# that listen to this tag and perform a deployment
+# of the new version in the correct repo.
+
 target="$(./build-scripts/get-parent.sh)"
 current_version="$1"
 

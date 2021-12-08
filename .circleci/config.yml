@@ -1,5 +1,8 @@
 version: 2.1
 
+#==============================================================================
+# Executors
+#==============================================================================
 executors:
   poetry_python_3-7:
     docker:
@@ -44,7 +47,9 @@ executors:
           username: $MY_CIRCLECI_DOCKERHUB_USERNAME
           password: $MY_CIRCLECI_DOCKERHUB_PASSWORD
 
-
+#==============================================================================
+# Contexts
+#==============================================================================
 docker_context: &docker_context
   context:
     - Leddzip Dockerhub
@@ -54,6 +59,9 @@ docker_and_artifactory_context: &docker_and_artifactory_context
     - Leddzip Dockerhub
     - Leddzip Python Artifactory
 
+#==============================================================================
+# Filters
+#==============================================================================
 master_filter: &master_filter
   filters:
     branches:
@@ -73,7 +81,9 @@ release_tag_filter: &release_tag_filter
     tags:
       only: /release-v.*/
 
-
+#==============================================================================
+# Commands
+#==============================================================================
 commands:
   test:
     steps:
@@ -88,6 +98,9 @@ commands:
       - store_artifacts:
           path: htmlcov
 
+#==============================================================================
+# Jobs
+#==============================================================================
 jobs:
   test-3-7:
     executor: poetry_python_3-7
@@ -146,7 +159,15 @@ jobs:
           bash ./build-scripts/handle-release.sh "$(cat deafadder_container/__init__.py | grep "__version__" | grep -o -e "[0-9]*\.[0-9]*\.[0-9]*")"
           bash ./build-scripts/handle-hotfix.sh "$(cat version)"
 
+#==============================================================================
+# Workflows
+#==============================================================================
 workflows:
+  #
+  # General purpose pipeline to execute tests, no matter the source branches
+  # It voluntary exclude tags to not have a double work with the automatic
+  # release process (that also include testing))
+  #
   "Test only pipeline":
     jobs:
       - test-3-7:
@@ -162,7 +183,14 @@ workflows:
           <<: *docker_context
           <<: *no_tag_filter
 
-
+  #
+  # Only on the master branch
+  # - Test,
+  # - validate if all version reference are the same everywhere in the project,
+  # - generate qodana artifact on circle ci
+  # - apply correct scripts if the commit in master is a merge commit (should
+  #   always be the case)
+  #
   "Master pipeline":
     jobs:
       - test-3-7:
@@ -199,6 +227,13 @@ workflows:
           requires:
             - check-version
 
+  #
+  # When the "Master pipeline" execute correctly until the end,
+  # it can result in a new commit on master, tagged with a release version.
+  # When this tag is pushed, this pipeline will retest everything and produce
+  # qodana and test artifact before deploying the new release in the correct
+  # pypi repo.
+  #
   "Buid and deploy pipeline":
     jobs:
       - test-3-7:
