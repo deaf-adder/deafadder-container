@@ -1,7 +1,7 @@
 from functools import wraps
 
 
-def autowire(*args, **kwargs):
+def autowire(**kwargs):
     """autowire annotation to be placed on top of __init__ method
 
     This decorator, by itself, doesn't do anything. However, it is used inside
@@ -29,7 +29,6 @@ def autowire(*args, **kwargs):
     This decorator will only have an effect when placed on top of a __init__ method
     inside a class that use the Component metaclass.
 
-    :param args: -
     :param kwargs: the parameter used for autowire instance mapping
     :return: the return of the __init__ method
     """
