@@ -14,7 +14,7 @@ See the [Quick start](GettingStarted/quickstart.md) guide for more details.
 
 ## Why
 
-Creating an application splat into multiple service and component is somehow quite verbose in plan python.
+Creating an application split into multiple service and component is somehow quite verbose in plan python.
 The idea is to mimic the singleton base approach of Spring and the container management to ease the development of such
 application in python.
 
@@ -22,11 +22,11 @@ application in python.
 
 This is not a Spring replication. The scope is way lighter and only focus on container management.
 
-For now, it does not support the dependency injection like Spring and this has to be done manually for now.
-
 ## Features
 
-- Create new container
-- Reuse and easily retrieve previously created container
-- Allow multiple instance of the same container if they have a specific name attached to them
-- Delete specific container
+- Create new Component
+- Reuse and easily retrieve previously created Component
+- Allow multiple instance of the same Component if they have a specific name attached to them
+- Delete specific Component, all Component of the same type, or simply purge everything
+- Auto inject Component field at Component creation (for Component that depends on other Components)
+- Manage *post init* configuration
