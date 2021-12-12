@@ -18,6 +18,10 @@ Creating an application split into multiple service and component is somehow qui
 The idea is to mimic the singleton base approach of Spring and the container management to ease the development of such
 application in python.
 
+Its quite ironic, but coming from a java/Spring background, I've always found application
+development more verbose in python than in java/Spring. This library is an attempt to bring
+back simplicity in python application development.
+
 ## What it is not
 
 This is not a Spring replication. The scope is way lighter and only focus on container management.
