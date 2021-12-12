@@ -2,12 +2,14 @@
 
   - [Installation](GettingStarted/installation.md)
   - [Quick start](GettingStarted/quickstart.md)
-  - [Advance usage](GettingStarted/AdvancedUsage/advanced.md)
 
-    - [Autowire](GettingStarted/AdvancedUsage/autowire.md)
-    - [Post init](GettingStarted/AdvancedUsage/post-init.md)
-    - [Scope](GettingStarted/AdvancedUsage/scope.md)
-    - [Testing](GettingStarted/AdvancedUsage/testing.md)
+- Features
+
+  - [Singleton(-ish)](Features/singleton.md)
+  - [Autowire](Features/autowire.md)
+  - [Post init](Features/post-init.md)
+  - [Scope](Features/scope.md)
+  - [Testing](Features/testing.md)
 
 - Dev Zone
 

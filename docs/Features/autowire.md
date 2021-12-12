@@ -18,6 +18,7 @@ import random
 
 from deafadder_container.MetaTemplate import Component
 
+
 class Service1(metaclass=Component):
     
     stuff = ["stuff1", "stuff2", "no"]
@@ -31,9 +32,8 @@ class Service1(metaclass=Component):
 ```python
 # service/second.py
 
-import random
-
 from deafadder_container.MetaTemplate import Component
+
 
 class Service2(metaclass=Component):
     
@@ -60,6 +60,7 @@ from deafadder_container.MetaTemplate import Component
 
 from service.first import Service1
 from service.second import Service2
+
 
 class Orchestrator(metaclass=Component):
     
@@ -90,6 +91,7 @@ def _initialiaze():
     service2 = Service2()
     orchestrator = Orchestrator()
 
+    
 if __name__ == "__main__":
     _initialiaze()
     
@@ -123,6 +125,7 @@ from deafadder_container.Wiring import autowire
 
 from service.first import Service1
 from service.second import Service2
+
 
 class Orchestrator(metaclass=Component):
     
@@ -160,6 +163,7 @@ def _initialiaze():
     service2 = Service2(instance_name="other name")
     orchestrator = Orchestrator()
 
+    
 if __name__ == "__main__":
     _initialiaze()
     
