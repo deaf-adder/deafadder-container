@@ -15,9 +15,8 @@
 
   - [Branching Model](DevZone/branchingModel.md)
 
-- Example
+- In Depth
 
-  - [Basic](Example/basic.md)
-  - [Convert Standard Class](Example/convert.md)
+  - [Memory model](InDepth/memory-model.md)
   
 - [Changelog](changelog.md)

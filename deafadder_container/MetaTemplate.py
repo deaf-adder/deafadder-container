@@ -96,7 +96,7 @@ class Component(type):
         """Retrieve a Component based on its class and name
 
         -----------------------------------------------
-        Example:
+        InDepth:
         --------
 
         class MyCustomComponent(metaclass=Component):
@@ -122,7 +122,7 @@ class Component(type):
         """Remove one specific instance form the list of possible instance for a given Component.
 
         -----------------------------------------------
-        Example:
+        InDepth:
         --------
 
         class MyCustomComponent(metaclass=Component):
@@ -155,7 +155,7 @@ class Component(type):
         """Remove all instance of the given Component from the possible references.
 
         -----------------------------------------------
-        Example:
+        InDepth:
         --------
 
         class MyCustomComponent(metaclass=Component):

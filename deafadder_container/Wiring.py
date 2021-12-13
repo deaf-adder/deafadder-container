@@ -8,10 +8,10 @@ def autowire(**kwargs):
     the Component creation where the arguments of this decorator are used
     to retrieve which instance has to be injected inside the new Component.
 
-    Example:
+    InDepth:
     --------
 
-    class Example(metaclass=Component)
+    class InDepth(metaclass=Component)
 
         dep1: FirstComponent
         dep2: SecondComponent
@@ -20,7 +20,7 @@ def autowire(**kwargs):
         def __init__(self, arg1, arg2, ...):
             pass
 
-    In this example, the Component Example, after initialization, will have the dep1 injected
+    In this example, the Component InDepth, after initialization, will have the dep1 injected
     with an instance of the Component FirstComponent that have the instance name "other".
     The field dep2 will be injected with the instance "default" of the Component SecondComponent.
 

@@ -1,8 +1,7 @@
 # Quick start
 
-?> For full examples, a little more meaningful that the one below, head over [here](Example/basic.md)
-
-?> For additional example, have a look inside the `tests` folder.
+?> For additional example, have a look inside the `tests` folder or in the **Features** 
+section of this documentation.
 
 
 The most basic example is not fancy, but is enough to demonstrate a basic use case:
