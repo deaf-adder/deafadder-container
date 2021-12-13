@@ -37,7 +37,7 @@ def test_simple_composition(first_dummy_component):
 def test_simple_composition_fails_with_prototype_reference():
     _ = _FirstDummyClassForTest(scope=Scope.PROTOTYPE)
     with pytest.raises(InstanceNotFound) as raised:
-        service = _CompositeDummyClassForTest()
+        _ = _CompositeDummyClassForTest()
 
     assert type(raised.value) is InstanceNotFound
     assert str(raised.value) == "Unable to find an instance for " \

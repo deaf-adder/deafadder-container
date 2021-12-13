@@ -1,7 +1,7 @@
 import pytest
 
 from deafadder_container.ContainerException import InstanceNotFound
-from deafadder_container.MetaTemplate import Component, _Anchor, Scope
+from deafadder_container.MetaTemplate import Component, Scope
 
 from .deafadder_container_metatemplate_test_helper import _FirstDummyClassForTest, \
     _SecondDummyClassForTest, _InheritedComponentWithMetaclass, _InheritedComponentWithoutMetaclass
@@ -294,4 +294,3 @@ def test_prototype_creation():
     assert singleton.counter == 0
 
     Component.purge()
-

@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "deafadder-container"
 version = "0.4.0"
-description = ""
-authors = ["none <none>"]
+description = "A dependency injection tools and container manager for python"
+authors = ["Leddzip <none>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
