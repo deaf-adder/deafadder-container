@@ -20,6 +20,7 @@ RELEASE_PATTERN="^release/.*"
 
 HEAD_PATTERN="^  remotes/origin/HEAD -> origin/master$"
 MASTER_STAR_PATTERN="^\* master$" # because on how 'git branch -a --contains xxx' works. It will put the current branch with a leading *
+FEATURE_PATTERN="^feature/DEAFADDER-.*$"
 
 MASTER_PATTERN="^master$"
 
@@ -59,7 +60,7 @@ IFS=' ' read commit1 commit2 <<< "$parent"
 
 
 branches_for_both_commit=$(printf "%s\n%s" "$(get_branches_commit_belong_to "$commit1")" "$(get_branches_commit_belong_to "$commit2")")
-branches_for_both_commit=$(echo "$branches_for_both_commit" | cut -d/ -f 3- | grep -v -e "$MASTER_PATTERN")
+branches_for_both_commit=$(echo "$branches_for_both_commit" | cut -d/ -f 3- | grep -v -e "$MASTER_PATTERN" -e "$FEATURE_PATTERN")
 
 cleaned_branch_for_both_commit=$(echo "$branches_for_both_commit" | sort | uniq) # should only contains one line
 
