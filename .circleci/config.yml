@@ -36,7 +36,7 @@ executors:
           password: $MY_CIRCLECI_DOCKERHUB_PASSWORD
   git:
     docker:
-      - image: leddzip/ubuntu-git:20.04
+      - image: leddzip/github-gh-cli:20.04
         auth:
           username: $MY_CIRCLECI_DOCKERHUB_USERNAME
           password: $MY_CIRCLECI_DOCKERHUB_PASSWORD
@@ -58,6 +58,11 @@ docker_and_artifactory_context: &docker_and_artifactory_context
   context:
     - Leddzip Dockerhub
     - Leddzip Python Artifactory
+
+docker_and_gh_context: &docker_and_gh_context
+  context:
+    - Leddzip Dockerhub
+    - Albert Bot GH Release Token
 
 #==============================================================================
 # Filters
@@ -139,6 +144,13 @@ jobs:
           poetry config repositories.deaf-adder-pypi $LEDDZIP_ARTIFACTORY_DEAF_ADDER_REPO
           poetry config http-basic.deaf-adder-pypi $ALBERT_BOT_ARTIFACTORY_USERNAME $ALBERT_BOT_ARTIFACTORY_PASSWORD
           poetry publish --repository deaf-adder-pypi
+  github-release:
+    executor: git
+    steps:
+      - checkout
+      - run: |
+          export GH_TOKEN=$ALBERT_BOT_GH_TOKEN_SCOPE_REPO
+          gh release create $CIRCLE_TAG --notes "Automatic release"
   check-version:
     executor: standart-bash
     steps:
@@ -269,3 +281,8 @@ workflows:
           <<: *release_tag_filter
           requires:
             - check-version
+      - github-release:
+          <<: *docker_and_gh_context
+          <<: *release_tag_filter
+          requires:
+            - deploy
