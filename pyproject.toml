@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "deafadder-container"
-version = "0.4.0"
+version = "0.5.0"
 description = "A dependency injection tools and container manager for python"
 authors = ["Leddzip <none>"]
 
