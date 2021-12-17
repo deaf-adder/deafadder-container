@@ -99,3 +99,16 @@ class _CompositeDummyClassWithNamedComponentForTest(metaclass=Component):
 
     def increment(self):
         self.base_service.increment()
+
+
+class _CompositeDummyClass3ForTest(metaclass=Component):
+
+    base_service: _FirstDummyClassForTest
+    counter = None
+
+    def __init__(self):
+        self.counter_at_creation = 0
+
+    def _post_init(self):
+        self.base_service.increment()
+        self.counter = self.base_service.counter

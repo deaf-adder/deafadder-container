@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.4.0
+
+## v0.3.0
+
+- Adding autowiring support based on type annotation
+- (technical) Improve workflows and pipelines
+- (technical) Revamping branching model
+
 ## v0.2.0
 
 - Adding a feature to delete all instance of a given class at once

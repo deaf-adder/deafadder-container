@@ -4,7 +4,7 @@ Branching model
 It will mostly follow the git flow branching model, with the little difference that there is no
 need for the develop branch for this project workflow.
 
-![logo](../assets/images/branching-model/base.svg ':size=WIDTHxHEIGHT')
+![logo](../assets/images/branching-model/base.svg)
 
 
 Workflow
