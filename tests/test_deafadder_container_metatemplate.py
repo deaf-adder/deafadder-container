@@ -313,3 +313,26 @@ def test_base():
 
     assert instance1.echo() == "hi, Me"
     assert instance2.echo() == "hi, Me"
+
+    assert instance1 is instance2
+
+
+class NormalClass:
+
+    def __init__(self, attribute: str):
+        self.attribute = attribute
+
+
+class ComponentClass(metaclass=Component):
+    normal_class_ref: NormalClass
+
+
+if __name__ == "__main__":
+    normal_class_as_component = Component.of(NormalClass(attribute="my attribute"))
+    component_instance = ComponentClass()
+
+    assert normal_class_as_component is Component.of(NormalClass(attribute="something else"))
+    assert normal_class_as_component is not Component.of(NormalClass(attribute="something else"), instance_name="non default")
+    assert component_instance.normal_class_ref is normal_class_as_component
+
+    assert component_instance.normal_class_ref.attribute == "my attribute"

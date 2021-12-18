@@ -216,9 +216,11 @@ class Component(type):
     def _of(cls, normal_class, instance, instance_name: str = DEFAULT_INSTANCE_NAME):
         with cls._lock:
             if normal_class not in cls._instances:
+                log.debug(f"(of) no entry for class {normal_class} found, adding the entry to the collection of instances.")
                 cls._instances[normal_class] = []
             if instance_name not in [i.name for i in cls._instances[normal_class]]:
                 cls._instances[normal_class].append(_NamedInstance(instance_name, instance))
+                log.debug(f"(of) instance with name '{instance_name}', created.")
             return next(filter(lambda i: i.name == instance_name, cls._instances[normal_class])).instance
 
     def _known_instance_name_for_class(cls) -> List[str]:
