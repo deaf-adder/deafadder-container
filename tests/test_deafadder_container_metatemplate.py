@@ -294,3 +294,22 @@ def test_prototype_creation():
     assert singleton.counter == 0
 
     Component.purge()
+
+
+class Base:
+
+    name: str
+
+    def __init__(self, name: str):
+        self.name = name
+
+    def echo(self):
+        return f"hi, {self.name}"
+
+
+def test_base():
+    instance1 = Component.of(Base(name="Me"))
+    instance2 = Component.of(Base(name="Not Me"))
+
+    assert instance1.echo() == "hi, Me"
+    assert instance2.echo() == "hi, Me"
