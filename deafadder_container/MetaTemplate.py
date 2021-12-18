@@ -92,7 +92,20 @@ class Component(type):
             _apply_post_init(new_instance)
         return new_instance
 
+    @staticmethod
     def get(cls, instance_name: str = DEFAULT_INSTANCE_NAME):
+        if type(cls) is Component:
+            return Component.get_component(cls, instance_name=instance_name)
+        else:
+            return Component._get(_Anchor, cls, instance_name=instance_name)
+
+    def _get(cls, actual_class, instance_name: str = DEFAULT_INSTANCE_NAME):
+        if actual_class in cls._instances and instance_name in [i.name for i in cls._instances[actual_class]]:
+            return next(filter(lambda i: i.name == instance_name, cls._instances[actual_class])).instance
+        else:
+            raise InstanceNotFound(f"Unable to find an instance for {actual_class} with name '{instance_name}'")
+
+    def get_component(cls, instance_name: str = DEFAULT_INSTANCE_NAME):
         """Retrieve a Component based on its class and name
 
         -----------------------------------------------
@@ -102,9 +115,9 @@ class Component(type):
         class MyCustomComponent(metaclass=Component):
             pass
 
-        Component.get(MyCustomComponent, "name")
+        Component.get_component(MyCustomComponent, "name")
         # or
-        MyCustomComponent.get("name")
+        MyCustomComponent.get_component("name")
         -----------------------------------------------
 
 
@@ -117,6 +130,13 @@ class Component(type):
             return cls._get_entry_for_name(instance_name).instance
         else:
             raise InstanceNotFound(f"Unable to find an instance for {cls} with name '{instance_name}'")
+
+    def get_all(cls) -> Dict[str, Any]:
+        with cls._lock:
+            if cls not in cls._instances:
+                return {}
+            else:
+                return {i.name: i.instance for i in cls._instances[cls]}
 
     def delete(cls, instance_name: str = DEFAULT_INSTANCE_NAME):
         """Remove one specific instance form the list of possible instance for a given Component.
@@ -211,6 +231,14 @@ class Component(type):
 
     @staticmethod
     def of(instance, instance_name: str = DEFAULT_INSTANCE_NAME):
+        """Create a Component out of a simple instance
+
+
+
+        :param instance:
+        :param instance_name:
+        :return:
+        """
         return Component._of(_Anchor, instance.__class__, instance, instance_name)
 
     def _of(cls, normal_class, instance, instance_name: str = DEFAULT_INSTANCE_NAME):
@@ -228,6 +256,13 @@ class Component(type):
 
     def _get_entry_for_name(cls, instance_name) -> _NamedInstance:
         return next(filter(lambda i: i.name == instance_name, cls._instances[cls]))
+
+    @staticmethod
+    def contains(cls):
+        return Component._contains(_Anchor, cls)
+
+    def _contains(cls, actual_class):
+        return actual_class in cls._instances
 
 
 class _Anchor(metaclass=Component):
@@ -301,7 +336,7 @@ class _AutowireMechanism:
             setattr(self._instance,
                     autowire_candidate.attribute_name,
                     Component.get(autowire_candidate.component_class,
-                                  autowire_candidate.component_instance_name))
+                                            autowire_candidate.component_instance_name))
         if self.autowire_triplet_candidates:
             log.debug(f"(_AutowireMechanism.apply {self._cls}, {self._instance_name}) Dependency injection finished")
 
@@ -315,7 +350,7 @@ class _AutowireMechanism:
     def _is_component(clazz) -> bool:
         # type(x) return the metaclass of the class (whatever the inheritance level)
         # so type(x) is either Component or something else in our case
-        if type(clazz) is Component:
+        if type(clazz) is Component or Component.contains(clazz):
             return True
         else:
             return False
