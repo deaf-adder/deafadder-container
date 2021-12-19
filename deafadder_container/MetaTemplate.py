@@ -173,12 +173,19 @@ class Component(type):
         else:
             raise InstanceNotFound(f"Unable to find an instance for {cls} with name '{instance_name}'")
 
-    def get_all(cls) -> Dict[str, Any]:
+    @staticmethod
+    def get_all(cls):
+        if type(cls) is Component:
+            return Component._get_all(cls, cls)
+        else:
+            return Component._get_all(_Anchor, cls)
+
+    def _get_all(cls, actual_class) -> Dict[str, Any]:
         with cls._lock:
-            if cls not in cls._instances:
+            if actual_class not in cls._instances:
                 return {}
             else:
-                return {i.name: i.instance for i in cls._instances[cls]}
+                return {i.name: i.instance for i in cls._instances[actual_class]}
 
     def delete(cls, instance_name: str = DEFAULT_INSTANCE_NAME):
         """Remove one specific instance form the list of possible instance for a given Component.

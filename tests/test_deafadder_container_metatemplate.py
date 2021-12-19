@@ -323,3 +323,41 @@ def test_base():
     assert instance1 is instance2
 
     Component.purge()
+
+
+def test_get_all_for_component_when_component_exist():
+
+    instance_first_1 = _FirstDummyClassForTest()
+    instance_first_2 = _FirstDummyClassForTest(instance_name="non default")
+    instance_second_1 = _SecondDummyClassForTest()
+
+    component_dict = Component.get_all(_FirstDummyClassForTest)
+
+    assert len(component_dict) == 2
+    assert component_dict["default"] is instance_first_1
+    assert component_dict["non default"] is instance_first_2
+    assert instance_second_1 not in component_dict.values()
+
+    Component.purge()
+
+
+def test_get_all_for_component_when_no_component_exist():
+
+    component_dict = Component.get_all(_FirstDummyClassForTest)
+
+    assert len(component_dict) == 0
+
+
+def test_get_all_for_normal_class_as_component_when_existing():
+    instance_base_1 = Component.of(Base(name="Me"))
+    instance_base_2 = Component.of(Base(name="Not me"), instance_name="non default")
+    instance_first_1 = _FirstDummyClassForTest()
+
+    component_dict = Component.get_all(Base)
+
+    assert len(component_dict) == 2
+    assert component_dict["default"] == instance_base_1
+    assert component_dict["non default"] == instance_base_2
+    assert instance_first_1 not in component_dict.values()
+
+    Component.purge()
