@@ -174,13 +174,33 @@ class Component(type):
             raise InstanceNotFound(f"Unable to find an instance for {cls} with name '{instance_name}'")
 
     @staticmethod
-    def get_all(cls):
+    def get_all(cls) -> Dict[str, Any]:
+        """ Get all registered instance of a given Component as a dict of name:instance
+
+         -----------------------------------------------
+        InDepth:
+        --------
+
+        class MyCustomComponent(metaclass=Component):
+            pass
+
+        i = MyCustomComponent()
+        j = MyCustomComponent(instance_name="non default")
+
+        compo_dict = Component.get_all(MyCustomComponent)
+        # compo_dict = {"default": i, "non default": j}
+        -----------------------------------------------
+
+        :param cls: the class for which you want to get all instances
+        :return: a dictionary containing all hte instance for the given class, as Dict[name:instance]
+        """
         if type(cls) is Component:
             return Component._get_all(cls, cls)
         else:
             return Component._get_all(_Anchor, cls)
 
     def _get_all(cls, actual_class) -> Dict[str, Any]:
+        """Anchor method to let static method access inner field such as lock and instance."""
         with cls._lock:
             if actual_class not in cls._instances:
                 return {}
