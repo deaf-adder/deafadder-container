@@ -94,19 +94,10 @@ class Component(type):
 
     @staticmethod
     def get(cls, instance_name: str = DEFAULT_INSTANCE_NAME):
-        if type(cls) is Component:
-            return Component.get_component(cls, instance_name=instance_name)
-        else:
-            return Component._get(_Anchor, cls, instance_name=instance_name)
-
-    def _get(cls, actual_class, instance_name: str = DEFAULT_INSTANCE_NAME):
-        if actual_class in cls._instances and instance_name in [i.name for i in cls._instances[actual_class]]:
-            return next(filter(lambda i: i.name == instance_name, cls._instances[actual_class])).instance
-        else:
-            raise InstanceNotFound(f"Unable to find an instance for {actual_class} with name '{instance_name}'")
-
-    def get_component(cls, instance_name: str = DEFAULT_INSTANCE_NAME):
         """Retrieve a Component based on its class and name
+
+        This method works as well for class that are not Component
+        but treated as so thanks to Component.of(instance)
 
         -----------------------------------------------
         InDepth:
@@ -118,6 +109,57 @@ class Component(type):
         Component.get_component(MyCustomComponent, "name")
         # or
         MyCustomComponent.get_component("name")
+        # or
+        Component.get(MyCustomComponent, "name")
+
+
+
+        class NormalClass:
+            pass
+
+        Component.of(NormalClass())
+        # this instance can be retrieve through:
+        Component.get(NormalClass)
+
+        -----------------------------------------------
+
+
+        :param cls: the class for which you want its instance retrieve
+        :param instance_name: the name of the instance to retrieve
+        :return: the instance with the given name if present
+        :raises: InstanceNotFound exception if there is no instance of the given class with the given name
+        """
+        if type(cls) is Component:
+            return Component.get_component(cls, instance_name=instance_name)
+        else:
+            return Component._get(_Anchor, cls, instance_name=instance_name)
+
+    def _get(cls, actual_class, instance_name: str = DEFAULT_INSTANCE_NAME):
+        """Anchor method to let static method access inner field such as lock and instance"""
+        if actual_class in cls._instances and instance_name in [i.name for i in cls._instances[actual_class]]:
+            return next(filter(lambda i: i.name == instance_name, cls._instances[actual_class])).instance
+        else:
+            raise InstanceNotFound(f"Unable to find an instance for {actual_class} with name '{instance_name}'")
+
+    def get_component(cls, instance_name: str = DEFAULT_INSTANCE_NAME):
+        """Retrieve a Component based on its class and name.
+
+        This method works only for class that are actually using the Component metaclass.
+        For component created through Component.of(instance), please refer
+        to Component.get(cls, instance_name)
+
+        -----------------------------------------------
+        InDepth:
+        --------
+
+        class MyCustomComponent(metaclass=Component):
+            pass
+
+        Component.get_component(MyCustomComponent, "name")
+        # or
+        MyCustomComponent.get_component("name")
+        # or
+        Component.get(MyCustomComponent, "name")
         -----------------------------------------------
 
 
@@ -222,6 +264,8 @@ class Component(type):
 
         It is splat this way in order to let the purge function be static, but still access
         class level attribute.
+
+        Anchor method to let static method access inner field such as lock and instance.
         """
         with cls._lock:
             keys = [k for k, v in cls._instances.items()]
@@ -233,15 +277,14 @@ class Component(type):
     def of(instance, instance_name: str = DEFAULT_INSTANCE_NAME):
         """Create a Component out of a simple instance
 
-
-
-        :param instance:
-        :param instance_name:
-        :return:
+        :param instance: the instance you want to convert to Component
+        :param instance_name: the name of the instance you want to create
+        :return: the instance passed as parameter, but as a Component
         """
         return Component._of(_Anchor, instance.__class__, instance, instance_name)
 
     def _of(cls, normal_class, instance, instance_name: str = DEFAULT_INSTANCE_NAME):
+        """Anchor method to let static method access inner field such as lock and instance."""
         with cls._lock:
             if normal_class not in cls._instances:
                 log.debug(f"(of) no entry for class {normal_class} found, adding the entry to the collection of instances.")
@@ -262,6 +305,7 @@ class Component(type):
         return Component._contains(_Anchor, cls)
 
     def _contains(cls, actual_class):
+        """Anchor method to let static method access inner field such as lock and instance."""
         return actual_class in cls._instances
 
 

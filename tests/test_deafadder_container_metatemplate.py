@@ -54,6 +54,8 @@ def test_get_instance_fails_when_no_instance_with_given_name():
 def test_get_instance_success_when_instance_exist():
     instance_first = _FirstDummyClassForTest()
     instance_second = Component.get_component(_FirstDummyClassForTest)
+    instance_third = Component.get(_FirstDummyClassForTest)
+    instance_fourth = _FirstDummyClassForTest.get_component()
 
     assert instance_first == instance_second
     assert instance_first.counter == 0
@@ -61,6 +63,10 @@ def test_get_instance_success_when_instance_exist():
     instance_first.increment()
     assert instance_first.counter == 1
     assert instance_second.counter == 1
+
+    assert instance_first is instance_second
+    assert instance_first is instance_third
+    assert instance_first is instance_fourth
 
     # Clean up
     Component.delete(_FirstDummyClassForTest)
