@@ -10,6 +10,7 @@
   - [Post init](Features/post-init.md)
   - [Scope](Features/scope.md)
   - [Component from normal class](Features/component-from-normal-class.md)
+  - [Get all](Features/get_all.md)
   - [Testing](Features/testing.md)
 
 - Dev Zone
