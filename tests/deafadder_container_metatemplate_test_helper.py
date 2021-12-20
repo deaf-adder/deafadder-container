@@ -62,7 +62,7 @@ class _CompositeDummyClassForTest(metaclass=Component):
     base_service: _FirstDummyClassForTest
 
     def __init__(self):
-        self.base_service = _FirstDummyClassForTest.get_component()
+        self.base_service = Component.get(_FirstDummyClassForTest)
 
     def get_counter_value(self):
         return self.base_service.counter
@@ -77,8 +77,8 @@ class _CompositeDummyClass2ForTest(metaclass=Component):
     composite_service: _CompositeDummyClassForTest
 
     def __init__(self):
-        self.base_service = _FirstDummyClassForTest.get_component()
-        self.composite_service = _CompositeDummyClassForTest.get_component()
+        self.base_service = Component.get(_FirstDummyClassForTest)
+        self.composite_service = Component.get(_CompositeDummyClassForTest)
 
     def get_counter_value(self):
         return self.base_service.counter
@@ -92,7 +92,7 @@ class _CompositeDummyClassWithNamedComponentForTest(metaclass=Component):
     base_service: _FirstDummyClassForTest
 
     def __init__(self):
-        self.base_service = _FirstDummyClassForTest.get_component("non default")
+        self.base_service = Component.get(_FirstDummyClassForTest, "non default")
 
     def get_counter_value(self):
         return self.base_service.counter
