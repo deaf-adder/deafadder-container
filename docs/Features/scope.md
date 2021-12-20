@@ -55,7 +55,7 @@ if __name__ == "__main__":
     assert inner_comp.counter == 10  # called 10 times with the self._inner_comp.increment()
 
     try:
-        comp = MyComponent.get_component()
+        comp = Component.get(MyComponent)
     except InstanceNotFound:
         print("There are Singleton instance of MyComponent that can be retrieved")
 

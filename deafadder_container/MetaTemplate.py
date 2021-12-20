@@ -182,8 +182,6 @@ class Component(type):
             pass
 
         Component.delete(MyCustomComponent, "name")
-        # or
-        MyCustomComponent.delete("name")
         -----------------------------------------------
 
         If a reference to the instance exist somewhere else, this reference will continue to exist.

@@ -96,7 +96,7 @@ def _initialiaze():
 if __name__ == "__main__":
     _initialiaze()
 
-    Orchestrator.get_component().handle_scenario()
+    Component.get(Orchestrator).handle_scenario()
 
 ```
 
@@ -169,6 +169,6 @@ def _initialiaze():
 if __name__ == "__main__":
     _initialiaze()
 
-    Orchestrator.get_component().handle_scenario()
+    Component.get(Orchestrator).handle_scenario()
 
 ```

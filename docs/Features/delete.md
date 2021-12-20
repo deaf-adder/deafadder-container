@@ -1,9 +1,9 @@
-# Testing
+# Delete
 
-Several function exist that can help for testing. Of course, even though they were implemented with testing
-purpose in mind, that does not exclude them from being used in non testing situation.
+The `delete`, `delete_all` and `purge` functions were initially build with testing in mind. Of course, even though they 
+were implemented for a testing purpose, that does not exclude them from being used in non testing situation.
 
-Those methods are mostly for deletion. Here, deleting mean being removed from the list of managed instances.
+Here, deleting mean being removed from the list of managed instances.
 It will still exist in the application memory as long as another object hold a reference to it (like in dependency 
 linked through autowire). For further details, have a look at the [memory model page](InDepth/memory-model.md)
 
@@ -28,15 +28,14 @@ To delete a single instance if you know the name of the instance.
 ```python
 MyComponent()
 
-assert MyComponent.get_component() is not None
-assert Component.get_component(MyComponent) is not None
+assert Component.get(MyComponent) is not None
 
 # or Component.delete(MyComponent)
-MyComponent.delete()
+Component.delete(MyComponent)
 
 # This instance does not exist anymore
 try:
-    MyComponent.get_component()
+    Component.get(MyComponent)
 except InstanceNotFound:
     pass
 
@@ -47,15 +46,14 @@ And the same works with named instance:
 ```python
 MyComponent(instance_name="non default")
 
-assert MyComponent.get_component(instance_name="non default") is not None
 assert Component.get_component(MyComponent, instance_name="non default") is not None
 
 # or Component.delete(MyComponent, instance_name="non default")
-MyComponent.delete(instance_name="non default")
+Component.delete(MyComponent, instance_name="non default")
 
 # This instance does not exist anymore
 try:
-    MyComponent.get_component(instance_name="non default")
+    Component.get(MyComponent, instance_name="non default")
 except InstanceNotFound:
     pass
 
@@ -69,20 +67,20 @@ Delete all instance of a given class.
 MyComponent()
 MyComponent(instance_name="non default")
 
-assert MyComponent.get_component() is not None
-assert MyComponent.get_component(instance_name="non default") is not None
+assert Component.get(MyComponent) is not None
+assert Component.get(MyComponent, instance_name="non default") is not None
 
 # or Component.delete_all(MyComponent)
-MyComponent.delete_all()
+Component.delete_all(MyComponent)
 
 # The instances don't exist anymore
 try:
-    MyComponent.get_component()
+    Component.get(MyComponent)
 except InstanceNotFound:
     pass
 
 try:
-    MyComponent.get_component(insance_name="non default")
+    Component.get(MyComponent, insance_name="non default")
 except InstanceNotFound:
     pass
 
@@ -97,25 +95,25 @@ MyComponent()
 MyComponent(instance_name="non default")
 MyOtherComponent()
 
-assert MyComponent.get_component() is not None
-assert MyComponent.get_component(instance_name="non default") is not None
-assert MyOtherComponent.get_component() is not None
+assert Component.get(MyComponent) is not None
+assert Component.get(MyComponent, instance_name="non default") is not None
+assert Component.get(MyOtherComponent) is not None
 
 Component.purge()
 
 # The instances don't exist anymore
 try:
-    MyComponent.get_component()
+    Component.get(MyComponent)
 except InstanceNotFound:
     pass
 
 try:
-    MyComponent.get_component(insance_name="non default")
+    Component.get(MyComponent, insance_name="non default")
 except InstanceNotFound:
     pass
 
 try:
-    MyOtherComponent.get_component(insance_name="non default")
+    Component.get(MyOtherComponent, insance_name="non default")
 except InstanceNotFound:
     pass
 
