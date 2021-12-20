@@ -1,6 +1,7 @@
 import inspect
 import ast
 import logging
+import re
 
 from enum import auto, Enum
 from dataclasses import dataclass
@@ -137,7 +138,7 @@ class Component(type):
             raise InstanceNotFound(f"Unable to find an instance for {actual_class} with name '{instance_name}'")
 
     @staticmethod
-    def get_all(cls) -> Dict[str, Any]:
+    def get_all(cls, pattern: str = ".*", names: List[str] = []) -> Dict[str, Any]:
         """ Get all registered instance of a given Component as a dict of name:instance
 
          -----------------------------------------------
@@ -158,17 +159,20 @@ class Component(type):
         :return: a dictionary containing all hte instance for the given class, as Dict[name:instance]
         """
         if type(cls) is Component:
-            return Component._get_all(cls, cls)
+            return Component._get_all(cls, cls, pattern=pattern, names=names)
         else:
             return Component._get_all(_Anchor, cls)
 
-    def _get_all(cls, actual_class) -> Dict[str, Any]:
+    def _get_all(cls, actual_class, pattern: str = ".*", names: List[str] = None) -> Dict[str, Any]:
         """Anchor method to let static method access inner field such as lock and instance."""
+        if names is None:
+            names = []
+
         with cls._lock:
             if actual_class not in cls._instances:
                 return {}
             else:
-                return {i.name: i.instance for i in cls._instances[actual_class]}
+                return {i.name: i.instance for i in cls._instances[actual_class] if re.match(pattern, i.name) or i.name in names}
 
     @staticmethod
     def delete(cls, instance_name: str = DEFAULT_INSTANCE_NAME):
