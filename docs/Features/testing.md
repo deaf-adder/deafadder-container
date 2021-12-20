@@ -28,15 +28,15 @@ To delete a single instance if you know the name of the instance.
 ```python
 MyComponent()
 
-assert MyComponent.get() is not None
-assert Component.get(MyComponent) is not None
+assert MyComponent.get_component() is not None
+assert Component.get_component(MyComponent) is not None
 
 # or Component.delete(MyComponent)
 MyComponent.delete()
 
 # This instance does not exist anymore
 try:
-    MyComponent.get()
+    MyComponent.get_component()
 except InstanceNotFound:
     pass
 
@@ -47,15 +47,15 @@ And the same works with named instance:
 ```python
 MyComponent(instance_name="non default")
 
-assert MyComponent.get(instance_name="non default") is not None
-assert Component.get(MyComponent, instance_name="non default") is not None
+assert MyComponent.get_component(instance_name="non default") is not None
+assert Component.get_component(MyComponent, instance_name="non default") is not None
 
 # or Component.delete(MyComponent, instance_name="non default")
 MyComponent.delete(instance_name="non default")
 
 # This instance does not exist anymore
 try:
-    MyComponent.get(instance_name="non default")
+    MyComponent.get_component(instance_name="non default")
 except InstanceNotFound:
     pass
 
@@ -69,20 +69,20 @@ Delete all instance of a given class.
 MyComponent()
 MyComponent(instance_name="non default")
 
-assert MyComponent.get() is not None
-assert MyComponent.get(instance_name="non default") is not None
+assert MyComponent.get_component() is not None
+assert MyComponent.get_component(instance_name="non default") is not None
 
 # or Component.delete_all(MyComponent)
 MyComponent.delete_all()
 
 # The instances don't exist anymore
 try:
-    MyComponent.get()
+    MyComponent.get_component()
 except InstanceNotFound:
     pass
 
 try:
-    MyComponent.get(insance_name="non default")
+    MyComponent.get_component(insance_name="non default")
 except InstanceNotFound:
     pass
 
@@ -97,25 +97,25 @@ MyComponent()
 MyComponent(instance_name="non default")
 MyOtherComponent()
 
-assert MyComponent.get() is not None
-assert MyComponent.get(instance_name="non default") is not None
-assert MyOtherComponent.get() is not None
+assert MyComponent.get_component() is not None
+assert MyComponent.get_component(instance_name="non default") is not None
+assert MyOtherComponent.get_component() is not None
 
 Component.purge()
 
 # The instances don't exist anymore
 try:
-    MyComponent.get()
+    MyComponent.get_component()
 except InstanceNotFound:
     pass
 
 try:
-    MyComponent.get(insance_name="non default")
+    MyComponent.get_component(insance_name="non default")
 except InstanceNotFound:
     pass
 
 try:
-    MyOtherComponent.get(insance_name="non default")
+    MyOtherComponent.get_component(insance_name="non default")
 except InstanceNotFound:
     pass
 

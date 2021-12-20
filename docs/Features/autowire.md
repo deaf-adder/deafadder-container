@@ -78,6 +78,7 @@ class Orchestrator(metaclass=Component):
 
 ### Main
 and the main function:
+
 ```python
 # main.py
 
@@ -91,11 +92,11 @@ def _initialiaze():
     service2 = Service2()
     orchestrator = Orchestrator()
 
-    
+
 if __name__ == "__main__":
     _initialiaze()
-    
-    Orchestrator.get().handle_scenario()
+
+    Orchestrator.get_component().handle_scenario()
 
 ```
 
@@ -150,6 +151,7 @@ class Orchestrator(metaclass=Component):
 
 ### Main
 and the main function:
+
 ```python
 # main.py
 
@@ -163,10 +165,10 @@ def _initialiaze():
     service2 = Service2(instance_name="other name")
     orchestrator = Orchestrator()
 
-    
+
 if __name__ == "__main__":
     _initialiaze()
-    
-    Orchestrator.get().handle_scenario()
+
+    Orchestrator.get_component().handle_scenario()
 
 ```

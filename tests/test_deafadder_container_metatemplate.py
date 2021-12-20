@@ -34,7 +34,7 @@ def test_failure_delete_when_no_instance_exist():
 
 def test_get_instance_fails_when_no_instance_exist():
     with pytest.raises(InstanceNotFound) as raised_exception:
-        _ = Component.get(_FirstDummyClassForTest)
+        _ = Component.get_component(_FirstDummyClassForTest)
     assert type(raised_exception.value) is InstanceNotFound
     assert str(raised_exception.value) == instance_not_found_message(_FirstDummyClassForTest)
 
@@ -43,7 +43,7 @@ def test_get_instance_fails_when_no_instance_with_given_name():
     instance_first = _FirstDummyClassForTest()
     assert instance_first is not None
     with pytest.raises(InstanceNotFound) as raised_exception:
-        _ = Component.get(_FirstDummyClassForTest, NON_DEFAULT_INSTANCE_NAME)
+        _ = Component.get_component(_FirstDummyClassForTest, NON_DEFAULT_INSTANCE_NAME)
     assert type(raised_exception.value) is InstanceNotFound
     assert str(raised_exception.value) == instance_not_found_message(_FirstDummyClassForTest, NON_DEFAULT_INSTANCE_NAME)
 
@@ -53,7 +53,9 @@ def test_get_instance_fails_when_no_instance_with_given_name():
 
 def test_get_instance_success_when_instance_exist():
     instance_first = _FirstDummyClassForTest()
-    instance_second = Component.get(_FirstDummyClassForTest)
+    instance_second = Component.get_component(_FirstDummyClassForTest)
+    instance_third = Component.get(_FirstDummyClassForTest)
+    instance_fourth = _FirstDummyClassForTest.get_component()
 
     assert instance_first == instance_second
     assert instance_first.counter == 0
@@ -61,6 +63,10 @@ def test_get_instance_success_when_instance_exist():
     instance_first.increment()
     assert instance_first.counter == 1
     assert instance_second.counter == 1
+
+    assert instance_first is instance_second
+    assert instance_first is instance_third
+    assert instance_first is instance_fourth
 
     # Clean up
     Component.delete(_FirstDummyClassForTest)
@@ -222,22 +228,22 @@ def test_delete_all_instance_of_same_class():
     Component.delete_all(_FirstDummyClassForTest)
 
     with pytest.raises(InstanceNotFound) as first_raised:
-        _ = _FirstDummyClassForTest.get()
+        _ = _FirstDummyClassForTest.get_component()
     assert type(first_raised.value) is InstanceNotFound
     assert str(first_raised.value) == instance_not_found_message(_FirstDummyClassForTest)
 
     with pytest.raises(InstanceNotFound) as second_raised:
-        _ = Component.get(_FirstDummyClassForTest)
+        _ = Component.get_component(_FirstDummyClassForTest)
     assert type(second_raised.value) is InstanceNotFound
     assert str(second_raised.value) == instance_not_found_message(_FirstDummyClassForTest)
 
     with pytest.raises(InstanceNotFound) as third_raised:
-        _ = _FirstDummyClassForTest.get("second")
+        _ = _FirstDummyClassForTest.get_component("second")
     assert type(third_raised.value) is InstanceNotFound
     assert str(third_raised.value) == instance_not_found_message(_FirstDummyClassForTest, "second")
 
     with pytest.raises(InstanceNotFound) as fourth_raised:
-        _ = Component.get(_FirstDummyClassForTest, instance_name="second")
+        _ = Component.get_component(_FirstDummyClassForTest, instance_name="second")
     assert type(fourth_raised.value) is InstanceNotFound
     assert str(fourth_raised.value) == instance_not_found_message(_FirstDummyClassForTest, "second")
 
@@ -254,17 +260,17 @@ def test_delete_all():
     Component.purge()
 
     with pytest.raises(InstanceNotFound) as first_raised:
-        _ = _FirstDummyClassForTest.get()
+        _ = _FirstDummyClassForTest.get_component()
     assert type(first_raised.value) is InstanceNotFound
     assert str(first_raised.value) == instance_not_found_message(_FirstDummyClassForTest)
 
     with pytest.raises(InstanceNotFound) as second_raised:
-        _ = _FirstDummyClassForTest.get(instance_name="second")
+        _ = _FirstDummyClassForTest.get_component(instance_name="second")
     assert type(second_raised.value) is InstanceNotFound
     assert str(second_raised.value) == instance_not_found_message(_FirstDummyClassForTest, name="second")
 
     with pytest.raises(InstanceNotFound) as third_raised:
-        _ = _SecondDummyClassForTest.get()
+        _ = _SecondDummyClassForTest.get_component()
     assert type(third_raised.value) is InstanceNotFound
     assert str(third_raised.value) == instance_not_found_message(_SecondDummyClassForTest)
 
@@ -278,7 +284,7 @@ def test_delete_all_when_nothing_to_delete():
     Component.delete_all(_FirstDummyClassForTest)
 
     with pytest.raises(InstanceNotFound) as raised:
-        _ = _FirstDummyClassForTest.get()
+        _ = _FirstDummyClassForTest.get_component()
 
     assert type(raised.value) is InstanceNotFound
     assert str(raised.value) == instance_not_found_message(_FirstDummyClassForTest)
@@ -316,23 +322,42 @@ def test_base():
 
     assert instance1 is instance2
 
-
-class NormalClass:
-
-    def __init__(self, attribute: str):
-        self.attribute = attribute
+    Component.purge()
 
 
-class ComponentClass(metaclass=Component):
-    normal_class_ref: NormalClass
+def test_get_all_for_component_when_component_exist():
+
+    instance_first_1 = _FirstDummyClassForTest()
+    instance_first_2 = _FirstDummyClassForTest(instance_name="non default")
+    instance_second_1 = _SecondDummyClassForTest()
+
+    component_dict = Component.get_all(_FirstDummyClassForTest)
+
+    assert len(component_dict) == 2
+    assert component_dict["default"] is instance_first_1
+    assert component_dict["non default"] is instance_first_2
+    assert instance_second_1 not in component_dict.values()
+
+    Component.purge()
 
 
-if __name__ == "__main__":
-    normal_class_as_component = Component.of(NormalClass(attribute="my attribute"))
-    component_instance = ComponentClass()
+def test_get_all_for_component_when_no_component_exist():
 
-    assert normal_class_as_component is Component.of(NormalClass(attribute="something else"))
-    assert normal_class_as_component is not Component.of(NormalClass(attribute="something else"), instance_name="non default")
-    assert component_instance.normal_class_ref is normal_class_as_component
+    component_dict = Component.get_all(_FirstDummyClassForTest)
 
-    assert component_instance.normal_class_ref.attribute == "my attribute"
+    assert len(component_dict) == 0
+
+
+def test_get_all_for_normal_class_as_component_when_existing():
+    instance_base_1 = Component.of(Base(name="Me"))
+    instance_base_2 = Component.of(Base(name="Not me"), instance_name="non default")
+    instance_first_1 = _FirstDummyClassForTest()
+
+    component_dict = Component.get_all(Base)
+
+    assert len(component_dict) == 2
+    assert component_dict["default"] == instance_base_1
+    assert component_dict["non default"] == instance_base_2
+    assert instance_first_1 not in component_dict.values()
+
+    Component.purge()

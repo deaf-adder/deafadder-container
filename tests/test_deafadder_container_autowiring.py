@@ -1,6 +1,6 @@
 import pytest
 
-from deafadder_container.ContainerException import AnnotatedDeclarationMissing, MultipleAutowireReference
+from deafadder_container.ContainerException import AnnotatedDeclarationMissing, MultipleAutowireReference, InstanceNotFound
 from deafadder_container.MetaTemplate import Component
 from deafadder_container.Wiring import autowire
 
@@ -35,7 +35,7 @@ class _Dummy4(metaclass=Component):
     service6: _Dummy3
 
     def __init__(self):
-        self.service3 = Component.get(_Dummy3)
+        self.service3 = Component.get_component(_Dummy3)
 
 
 class _Dummy5(metaclass=Component):
@@ -46,7 +46,7 @@ class _Dummy5(metaclass=Component):
 
     @autowire(service5="non default 1", service6="non default 2")
     def __init__(self):
-        self.service3 = Component.get(_Dummy3)
+        self.service3 = Component.get_component(_Dummy3)
 
 
 class _Dummy6(metaclass=Component):
@@ -58,7 +58,7 @@ class _Dummy6(metaclass=Component):
     @autowire(service5="non default 1")
     @autowire(service6="non default 2")
     def __init__(self):
-        self.service3 = Component.get(_Dummy3)
+        self.service3 = Component.get_component(_Dummy3)
 
 
 class _Dummy7(metaclass=Component):
@@ -70,7 +70,7 @@ class _Dummy7(metaclass=Component):
     @autowire(service5="non default 1")
     @autowire(service7="non default 2")
     def __init__(self):
-        self.service3 = Component.get(_Dummy3)
+        self.service3 = Component.get_component(_Dummy3)
 
 
 class _Dummy8(metaclass=Component):
@@ -83,7 +83,7 @@ class _Dummy8(metaclass=Component):
     @autowire(service5="non default 1")
     @autowire(service6="non default 2")
     def __init__(self):
-        self.service3 = Component.get(_Dummy3)
+        self.service3 = Component.get_component(_Dummy3)
 
 
 class _Dummy9(metaclass=Component):
@@ -95,7 +95,7 @@ class _Dummy9(metaclass=Component):
     @autowire(service5="non default 1", service6="non default 2")
     @autowire(service6="non default 2")
     def __init__(self):
-        self.service3 = Component.get(_Dummy3)
+        self.service3 = Component.get_component(_Dummy3)
 
 
 class _Dummy10(_Dummy1):
@@ -258,3 +258,52 @@ def test_can_autowire_inherited_component(dummy12_default):
     assert dummy13.service1.get_one() == 1
 
     Component.delete(_Dummy13)
+
+
+class NormalClass:
+
+    def __init__(self, attribute: str):
+        self.attribute = attribute
+
+
+class ComponentClass(metaclass=Component):
+
+    normal_class_ref: NormalClass
+
+
+def test_autowiring_with_component_of():
+    normal_class_as_component = Component.of(NormalClass(attribute="my attribute"))
+    component_instance = ComponentClass()
+
+    assert normal_class_as_component is Component.of(NormalClass(attribute="something else"))
+    assert normal_class_as_component is not Component.of(NormalClass(attribute="something else"), instance_name="non default")
+    assert component_instance.normal_class_ref is normal_class_as_component
+
+    assert component_instance.normal_class_ref.attribute == "my attribute"
+
+    Component.purge()
+
+
+class ComponentClassBis(metaclass=Component):
+
+    normal_class_ref: NormalClass
+
+    @autowire(normal_class_ref="non default")
+    def __init__(self):
+        pass
+
+
+def test_autowiring_with_component_of_and_non_existing_named_instance():
+
+    normal_class_as_component = Component.of(
+        NormalClass(attribute="my attribute"),
+        instance_name="default"
+    )
+
+    with pytest.raises(InstanceNotFound) as raised:
+        _ = ComponentClassBis()
+
+    assert type(raised.value) is InstanceNotFound
+    assert str(raised.value) == f"Unable to find an instance for {normal_class_as_component.__class__} with name 'non default'"
+
+    Component.purge()

@@ -3,13 +3,14 @@
   - [Installation](GettingStarted/installation.md)
   - [Quick start](GettingStarted/quickstart.md)
 
-- Features
+- [Features](Features/readme.md)
 
   - [Singleton(-ish)](Features/singleton.md)
   - [Autowire](Features/autowire.md)
   - [Post init](Features/post-init.md)
   - [Scope](Features/scope.md)
   - [Component from normal class](Features/component-from-normal-class.md)
+  - [Get all](Features/get_all.md)
   - [Testing](Features/testing.md)
 
 - Dev Zone
