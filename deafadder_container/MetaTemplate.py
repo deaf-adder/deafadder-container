@@ -63,7 +63,7 @@ class Component(type):
                 log.debug(f"(__call__ {cls}, {instance_name}) Component not present, initializing the entry in the instance record.")
                 cls._instances[cls] = []
 
-            if instance_name not in cls._known_instance_name_for_class():
+            if instance_name not in cls._known_instance_name_for_class(cls):
                 log.debug(f"(__call__ {cls}, {instance_name}) No instance with name '{instance_name}' found for the Component. Creating it...")
                 new_instance = super().__call__(*args, **kwargs)
 
@@ -72,7 +72,7 @@ class Component(type):
                 _apply_post_init(new_instance)
 
                 cls._instances[cls].append(_NamedInstance(name=instance_name, instance=new_instance))
-        container_entry = cls._get_entry_for_name(instance_name)
+        container_entry = cls._get_entry_for_name(cls, instance_name)
         log.debug(f"(__call__ {cls}, {instance_name}) Instance found.")
         return container_entry.instance
 
@@ -131,8 +131,8 @@ class Component(type):
 
     def _get(cls, actual_class, instance_name: str = DEFAULT_INSTANCE_NAME):
         """Anchor method to let static method access inner field such as lock and instance"""
-        if actual_class in cls._instances and instance_name in [i.name for i in cls._instances[actual_class]]:
-            return next(filter(lambda i: i.name == instance_name, cls._instances[actual_class])).instance
+        if actual_class in cls._instances and instance_name in cls._known_instance_name_for_class(actual_class):
+            return cls._get_entry_for_name(actual_class, instance_name).instance
         else:
             raise InstanceNotFound(f"Unable to find an instance for {actual_class} with name '{instance_name}'")
 
@@ -191,6 +191,7 @@ class Component(type):
         This is mostly for test purpose. Since there is very few use case that could need this
         deletion feature in real world scenario.
 
+        :param cls: the class you want to delete an entry from
         :param instance_name: the name of the instance to delete
         :return:  Nothing
         :raises: InstanceNotFound exception if there is no instance of the given class with the given name
@@ -202,7 +203,7 @@ class Component(type):
 
     def _delete(cls, actual_class, instance_name: str = DEFAULT_INSTANCE_NAME):
         with cls._lock:
-            if actual_class in cls._instances and instance_name in [i.name for i in cls._instances[actual_class]]:
+            if actual_class in cls._instances and instance_name in cls._known_instance_name_for_class(actual_class):
                 log.debug(f"(delete {actual_class}, {instance_name}) Deleting instance")
                 cls._instances[actual_class] = list(filter(lambda i: i.name != instance_name, cls._instances[actual_class]))
             else:
@@ -292,16 +293,16 @@ class Component(type):
             if normal_class not in cls._instances:
                 log.debug(f"(of) no entry for class {normal_class} found, adding the entry to the collection of instances.")
                 cls._instances[normal_class] = []
-            if instance_name not in [i.name for i in cls._instances[normal_class]]:
+            if instance_name not in cls._known_instance_name_for_class(normal_class):
                 cls._instances[normal_class].append(_NamedInstance(instance_name, instance))
                 log.debug(f"(of) instance with name '{instance_name}', created.")
-            return next(filter(lambda i: i.name == instance_name, cls._instances[normal_class])).instance
+            return cls._get_entry_for_name(normal_class, instance_name).instance
 
-    def _known_instance_name_for_class(cls) -> List[str]:
-        return [i.name for i in cls._instances[cls]]
+    def _known_instance_name_for_class(cls, actual_class) -> List[str]:
+        return [i.name for i in cls._instances[actual_class]]
 
-    def _get_entry_for_name(cls, instance_name) -> _NamedInstance:
-        return next(filter(lambda i: i.name == instance_name, cls._instances[cls]))
+    def _get_entry_for_name(cls, actual_class, instance_name) -> _NamedInstance:
+        return next(filter(lambda i: i.name == instance_name, cls._instances[actual_class]))
 
     @staticmethod
     def contains(cls) -> bool:
@@ -392,7 +393,7 @@ class _AutowireMechanism:
             setattr(self._instance,
                     autowire_candidate.attribute_name,
                     Component.get(autowire_candidate.component_class,
-                                            autowire_candidate.component_instance_name))
+                                  autowire_candidate.component_instance_name))
         if self.autowire_triplet_candidates:
             log.debug(f"(_AutowireMechanism.apply {self._cls}, {self._instance_name}) Dependency injection finished")
 
