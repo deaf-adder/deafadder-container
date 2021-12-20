@@ -5,6 +5,12 @@ from deafadder_container.MetaTemplate import Component
 from deafadder_container.Wiring import autowire
 
 
+@pytest.fixture(autouse=True)
+def purge_component_fixture():
+    yield
+    Component.purge()
+
+
 class _Dummy1(metaclass=Component):
 
     def get_one(self):
@@ -123,43 +129,36 @@ class _Dummy13(metaclass=Component):
 @pytest.fixture
 def dummy1_default():
     yield _Dummy1()
-    Component.delete(_Dummy1)
 
 
 @pytest.fixture
 def dummy2_default():
     yield _Dummy2()
-    Component.delete(_Dummy2)
 
 
 @pytest.fixture
 def dummy3_default(dummy1_default):
     yield _Dummy3()
-    Component.delete(_Dummy3)
 
 
 @pytest.fixture
 def dummy3_non_default_1():
     yield _Dummy3(instance_name="non default 1")
-    Component.delete(_Dummy3, instance_name="non default 1")
 
 
 @pytest.fixture
 def dummy3_non_default_2():
     yield _Dummy3(instance_name="non default 2")
-    Component.delete(_Dummy3, instance_name="non default 2")
 
 
 @pytest.fixture
 def dummy10_default(dummy1_default, dummy2_default):
     yield _Dummy10()
-    Component.delete(_Dummy10)
 
 
 @pytest.fixture
 def dummy12_default():
     yield _Dummy12()
-    Component.delete(_Dummy12)
 
 
 def test_default_autowire_for_non_set_annotated_component(dummy1_default, dummy2_default):
@@ -167,8 +166,6 @@ def test_default_autowire_for_non_set_annotated_component(dummy1_default, dummy2
 
     assert dummy3.get_three() == 3
     assert dummy3.service1.get_one() == 1
-
-    Component.delete(_Dummy3)
 
 
 def test_default_autowire_no_explicit_autowire_implicit_default(dummy3_default):
@@ -183,8 +180,6 @@ def test_default_autowire_no_explicit_autowire_implicit_default(dummy3_default):
     assert dummy4.service3 is dummy4.service5
     assert dummy4.service3 is dummy4.service6
 
-    Component.delete(_Dummy4)
-
 
 def test_explicit_autowire_retrieve_correct_instance(dummy3_default, dummy3_non_default_1, dummy3_non_default_2):
     dummy5 = _Dummy5()
@@ -198,8 +193,6 @@ def test_explicit_autowire_retrieve_correct_instance(dummy3_default, dummy3_non_
     assert dummy5.service3 is not dummy5.service5
     assert dummy5.service3 is not dummy5.service6
 
-    Component.delete(_Dummy5)
-
 
 def test_explicit_autowire_with_multiple_decorator(dummy3_default, dummy3_non_default_1, dummy3_non_default_2):
     dummy6 = _Dummy6()
@@ -212,8 +205,6 @@ def test_explicit_autowire_with_multiple_decorator(dummy3_default, dummy3_non_de
     assert dummy6.service3 is dummy6.service4
     assert dummy6.service3 is not dummy6.service5
     assert dummy6.service3 is not dummy6.service6
-
-    Component.delete(_Dummy6)
 
 
 def test_explicit_autowire_cant_map_non_declared_annotated_component(dummy3_default, dummy3_non_default_1, dummy3_non_default_2):
@@ -248,16 +239,12 @@ def test_can_extend_and_require_same_dependency(dummy1_default, dummy2_default):
     assert dummy10.service1.get_one() == 1
     assert dummy10.service2.get_two() == 2
 
-    Component.delete(_Dummy10)
-
 
 def test_can_autowire_inherited_component(dummy12_default):
     dummy13 = _Dummy13()
 
     assert dummy13.get_thirteen() == 13
     assert dummy13.service1.get_one() == 1
-
-    Component.delete(_Dummy13)
 
 
 class NormalClass:
@@ -281,8 +268,6 @@ def test_autowiring_with_component_of():
 
     assert component_instance.normal_class_ref.attribute == "my attribute"
 
-    Component.purge()
-
 
 class ComponentClassBis(metaclass=Component):
 
@@ -305,5 +290,3 @@ def test_autowiring_with_component_of_and_non_existing_named_instance():
 
     assert type(raised.value) is InstanceNotFound
     assert str(raised.value) == f"Unable to find an instance for {normal_class_as_component.__class__} with name 'non default'"
-
-    Component.purge()
