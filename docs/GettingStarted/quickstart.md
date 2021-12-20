@@ -32,10 +32,8 @@ if __name__ == "__main__":
 
     # but more importantly, it is retrievable
     # it can be accessed anywhere in the application with:
-    my_component_retrieved = MyComponent.get_component()
-    my_component_retrieved_bis = Component.get_component(MyComponent)
+    my_component_retrieved = Component.get(MyComponent)
     assert my_component is my_component_retrieved
-    assert my_component is my_component_retrieved_bis
 
 ```
 

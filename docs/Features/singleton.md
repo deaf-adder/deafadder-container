@@ -29,22 +29,16 @@ if __name__ == "__main__":
     assert instance is instance_bis
 
     # retrieving the instance will return the initial one
-    instance_ter = MyComponent.get_component()
+    instance_ter = Component.get(MyComponent)
     assert instance is instance_ter
-
-    instance_ter_bis = Component.get_component(MyComponent)
-    assert instance is instance_ter_bis
 
     # creating an instance with the default name will return the initial one
     instance_quad = MyComponent(instance_name="default")
     assert instance is instance_quad
 
     # retrieving the instance with the name default will return the initial one
-    instance_quint = MyComponent.get_component(instance_name="default")
+    instance_quint = Component.get(MyComponent, instance_name="default")
     assert instance is instance_quint
-
-    instance_quint_bis = Component.get_component(MyComponent, instance_name="default")
-    assert instance is instance_quint_bis
 
 ```
 
@@ -65,9 +59,8 @@ if __name__ == "__main__":
     assert named is not instance
 
     # retrieving the named instance
-    named_bis = MyComponent.get_component(instance_name="name")
+    named_bis = Component.get(MyComponent, instance_name="name")
     assert named is named_bis
-    assert named is Component.get_component(MyComponent, instance_name="name")
 
     # creating an instance with the same name
     named_ter = MyComponent(instance_name="name")

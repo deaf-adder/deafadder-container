@@ -41,7 +41,7 @@ class _Dummy4(metaclass=Component):
     service6: _Dummy3
 
     def __init__(self):
-        self.service3 = Component.get_component(_Dummy3)
+        self.service3 = Component.get(_Dummy3)
 
 
 class _Dummy5(metaclass=Component):
@@ -52,7 +52,7 @@ class _Dummy5(metaclass=Component):
 
     @autowire(service5="non default 1", service6="non default 2")
     def __init__(self):
-        self.service3 = Component.get_component(_Dummy3)
+        self.service3 = Component.get(_Dummy3)
 
 
 class _Dummy6(metaclass=Component):
@@ -64,7 +64,7 @@ class _Dummy6(metaclass=Component):
     @autowire(service5="non default 1")
     @autowire(service6="non default 2")
     def __init__(self):
-        self.service3 = Component.get_component(_Dummy3)
+        self.service3 = Component.get(_Dummy3)
 
 
 class _Dummy7(metaclass=Component):
@@ -76,7 +76,7 @@ class _Dummy7(metaclass=Component):
     @autowire(service5="non default 1")
     @autowire(service7="non default 2")
     def __init__(self):
-        self.service3 = Component.get_component(_Dummy3)
+        self.service3 = Component.get(_Dummy3)
 
 
 class _Dummy8(metaclass=Component):
@@ -89,7 +89,7 @@ class _Dummy8(metaclass=Component):
     @autowire(service5="non default 1")
     @autowire(service6="non default 2")
     def __init__(self):
-        self.service3 = Component.get_component(_Dummy3)
+        self.service3 = Component.get(_Dummy3)
 
 
 class _Dummy9(metaclass=Component):
@@ -101,7 +101,7 @@ class _Dummy9(metaclass=Component):
     @autowire(service5="non default 1", service6="non default 2")
     @autowire(service6="non default 2")
     def __init__(self):
-        self.service3 = Component.get_component(_Dummy3)
+        self.service3 = Component.get(_Dummy3)
 
 
 class _Dummy10(_Dummy1):

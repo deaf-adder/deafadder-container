@@ -106,12 +106,7 @@ class Component(type):
         class MyCustomComponent(metaclass=Component):
             pass
 
-        Component.get_component(MyCustomComponent, "name")
-        # or
-        MyCustomComponent.get_component("name")
-        # or
         Component.get(MyCustomComponent, "name")
-
 
 
         class NormalClass:
@@ -130,7 +125,7 @@ class Component(type):
         :raises: InstanceNotFound exception if there is no instance of the given class with the given name
         """
         if type(cls) is Component:
-            return Component.get_component(cls, instance_name=instance_name)
+            return Component._get(cls, cls, instance_name=instance_name)
         else:
             return Component._get(_Anchor, cls, instance_name=instance_name)
 
@@ -140,38 +135,6 @@ class Component(type):
             return next(filter(lambda i: i.name == instance_name, cls._instances[actual_class])).instance
         else:
             raise InstanceNotFound(f"Unable to find an instance for {actual_class} with name '{instance_name}'")
-
-    def get_component(cls, instance_name: str = DEFAULT_INSTANCE_NAME):
-        """Retrieve a Component based on its class and name.
-
-        This method works only for class that are actually using the Component metaclass.
-        For component created through Component.of(instance), please refer
-        to Component.get(cls, instance_name)
-
-        -----------------------------------------------
-        InDepth:
-        --------
-
-        class MyCustomComponent(metaclass=Component):
-            pass
-
-        Component.get_component(MyCustomComponent, "name")
-        # or
-        MyCustomComponent.get_component("name")
-        # or
-        Component.get(MyCustomComponent, "name")
-        -----------------------------------------------
-
-
-        :param instance_name: the name of the instance to retrieve
-        :return: the instance with the given name if present
-        :raises: InstanceNotFound exception if there is no instance of the given class with the given name
-        """
-        if cls in cls._instances and instance_name in cls._known_instance_name_for_class():
-            log.debug(f"(get {cls}, {instance_name}) Instance found")
-            return cls._get_entry_for_name(instance_name).instance
-        else:
-            raise InstanceNotFound(f"Unable to find an instance for {cls} with name '{instance_name}'")
 
     @staticmethod
     def get_all(cls) -> Dict[str, Any]:
@@ -207,6 +170,7 @@ class Component(type):
             else:
                 return {i.name: i.instance for i in cls._instances[actual_class]}
 
+    @staticmethod
     def delete(cls, instance_name: str = DEFAULT_INSTANCE_NAME):
         """Remove one specific instance form the list of possible instance for a given Component.
 
@@ -218,8 +182,6 @@ class Component(type):
             pass
 
         Component.delete(MyCustomComponent, "name")
-        # or
-        MyCustomComponent.delete("name")
         -----------------------------------------------
 
         If a reference to the instance exist somewhere else, this reference will continue to exist.
@@ -233,13 +195,20 @@ class Component(type):
         :return:  Nothing
         :raises: InstanceNotFound exception if there is no instance of the given class with the given name
         """
-        with cls._lock:
-            if cls in cls._instances and instance_name in cls._known_instance_name_for_class():
-                log.debug(f"(delete {cls}, {instance_name}) Deleting instance")
-                cls._instances[cls] = list(filter(lambda i: i.name != instance_name, cls._instances[cls]))
-            else:
-                raise InstanceNotFound(f"Unable to find an instance for {cls} with name '{instance_name}'")
+        if type(cls) is Component:
+            Component._delete(cls, cls, instance_name=instance_name)
+        else:
+            Component._delete(_Anchor, cls, instance_name=instance_name)
 
+    def _delete(cls, actual_class, instance_name: str = DEFAULT_INSTANCE_NAME):
+        with cls._lock:
+            if actual_class in cls._instances and instance_name in [i.name for i in cls._instances[actual_class]]:
+                log.debug(f"(delete {actual_class}, {instance_name}) Deleting instance")
+                cls._instances[actual_class] = list(filter(lambda i: i.name != instance_name, cls._instances[actual_class]))
+            else:
+                raise InstanceNotFound(f"Unable to find an instance for {actual_class} with name '{instance_name}'")
+
+    @staticmethod
     def delete_all(cls) -> None:
         """Remove all instance of the given Component from the possible references.
 
@@ -251,8 +220,6 @@ class Component(type):
             pass
 
         Component.delete_all(MyCustomComponent)
-        # or
-        MyCustomComponent.delete_all()
         -----------------------------------------------
 
         If a reference to the instance exist somewhere else, this reference will continue to exist.
@@ -264,12 +231,21 @@ class Component(type):
 
         :return: Nothing
         """
+        if type(cls) is Component:
+            Component._delete_all(cls, cls)
+        else:
+            Component._delete_all(_Anchor, cls)
+
+    def _delete_all(cls, actual_class) -> None:
+        """Anchor method to let static method access inner field such as lock and instance."""
         with cls._lock:
-            if cls in cls._instances:
-                log.debug(f"(delete_all) Deleting all entries for {cls}. Entries deleted: {cls._instances[cls]}")
-                cls._instances.pop(cls)
+            if actual_class in cls._instances:
+                log.debug(f"(delete_all) Deleting all entries for {actual_class}.")
+                deleted_classes_string = str(cls._instances[actual_class])
+                cls._instances.pop(actual_class)
+                log.debug(f"(delete_all) Entries deleted: {deleted_classes_string}")
             else:
-                log.debug(f"(delete_all) Nothing to do. No instance found for class {cls}")
+                log.debug(f"(delete_all) Nothing to do. No instance found for class {actual_class}")
 
     @staticmethod
     def purge():

@@ -11,7 +11,7 @@
   - [Scope](Features/scope.md)
   - [Component from normal class](Features/component-from-normal-class.md)
   - [Get all](Features/get_all.md)
-  - [Testing](Features/testing.md)
+  - [Delete](Features/delete.md)
 
 - Dev Zone
 
