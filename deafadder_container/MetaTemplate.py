@@ -328,16 +328,25 @@ class Component(type):
         return next(filter(lambda i: i.name == instance_name, cls._instances[cls]))
 
     @staticmethod
-    def contains(cls):
+    def contains(cls) -> bool:
+        """ Check if the collection of managed instances contains an entry for the given class.
+
+        Used for the autowiring mechanism to handle component created with Component.of
+        Could be used for other purpose but the usage should be quite limited.
+
+        :param cls: the class we want to check if an instance is present in the collection
+        :return: true if an instance of the class is present in the list of managed instances
+                 false otherwise
+        """
         return Component._contains(_Anchor, cls)
 
-    def _contains(cls, actual_class):
+    def _contains(cls, actual_class) -> bool:
         """Anchor method to let static method access inner field such as lock and instance."""
-        return actual_class in cls._instances
+        return actual_class in cls._instances and cls._instances[actual_class]
 
 
 class _Anchor(metaclass=Component):
-    """This is a dummy class only to enable a purge behavior on Component"""
+    """This is a dummy class only to enable access to the metaclass inner field through it."""
     pass
 
 

@@ -3,7 +3,7 @@
   - [Installation](GettingStarted/installation.md)
   - [Quick start](GettingStarted/quickstart.md)
 
-- Features
+- [Features](Features/readme.md)
 
   - [Singleton(-ish)](Features/singleton.md)
   - [Autowire](Features/autowire.md)
