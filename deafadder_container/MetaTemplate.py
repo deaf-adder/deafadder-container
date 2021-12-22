@@ -156,6 +156,8 @@ class Component(type):
         -----------------------------------------------
 
         :param cls: the class for which you want to get all instances
+        :param pattern: a regex that describe the names of the instances you want to retrieve
+        :param names: the list of names of the instances you want to retrieve
         :return: a dictionary containing all hte instance for the given class, as Dict[name:instance]
         """
         if type(cls) is Component:
