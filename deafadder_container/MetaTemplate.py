@@ -6,7 +6,7 @@ import re
 from enum import auto, Enum
 from dataclasses import dataclass
 from threading import Lock
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Match
 from deafadder_container.ContainerException import InstanceNotFound, MultipleAutowireReference, \
     AnnotatedDeclarationMissing
 
@@ -138,7 +138,7 @@ class Component(type):
             raise InstanceNotFound(f"Unable to find an instance for {actual_class} with name '{instance_name}'")
 
     @staticmethod
-    def get_all(cls, pattern: str = ".*", names: List[str] = []) -> Dict[str, Any]:
+    def get_all(cls, pattern: str = None, names: List[str] = None) -> Dict[str, Any]:
         """ Get all registered instance of a given Component as a dict of name:instance
 
          -----------------------------------------------
@@ -163,16 +163,26 @@ class Component(type):
         else:
             return Component._get_all(_Anchor, cls)
 
-    def _get_all(cls, actual_class, pattern: str = ".*", names: List[str] = None) -> Dict[str, Any]:
+    def _get_all(cls, actual_class, pattern: str = None, names: List[str] = None) -> Dict[str, Any]:
         """Anchor method to let static method access inner field such as lock and instance."""
-        if names is None:
-            names = []
-
         with cls._lock:
             if actual_class not in cls._instances:
                 return {}
             else:
-                return {i.name: i.instance for i in cls._instances[actual_class] if re.match(pattern, i.name) or i.name in names}
+                if pattern is None and names is None:
+                    return {i.name: i.instance for i in cls._instances[actual_class]}
+                else:
+                    return {i.name: i.instance for i in cls._instances[actual_class]
+                            if cls._name_match_pattern(i.name, pattern)
+                            or cls._name_in_wanted_name_list(i.name, names)}
+
+    @staticmethod
+    def _name_match_pattern(name: str, pattern: str = None) -> bool:
+        return re.match(pattern, name) if pattern is not None else False
+
+    @staticmethod
+    def _name_in_wanted_name_list(name: str, name_list: List[str] = None):
+        return name in name_list if name_list is not None else False
 
     @staticmethod
     def delete(cls, instance_name: str = DEFAULT_INSTANCE_NAME):

@@ -360,3 +360,113 @@ def test_delete_all_for_normal_class_as_component():
     with pytest.raises(InstanceNotFound) as second_raised:
         Component.get(Base, instance_name="non default")
     assert str(second_raised.value) == instance_not_found_message(Base, name="non default")
+
+
+def test_get_all_with_list_name_when_some_match(purge):
+    instance_1 = _FirstDummyClassForTest(instance_name="non default 1")
+    _ = _FirstDummyClassForTest(instance_name="non default 2")
+    instance_3 = _FirstDummyClassForTest(instance_name="non default 3")
+
+    instances = Component.get_all(_FirstDummyClassForTest, names=["non default 1", "non default 3"])
+
+    assert len(instances) == 2
+
+    assert "non default 1" in instances
+    assert instances["non default 1"] is instance_1
+
+    assert "non default 2" not in instances
+
+    assert "non default 3" in instances
+    assert instances["non default 3"] is instance_3
+
+
+def test_get_all_with_list_name_when_none_match(purge):
+    _1 = _FirstDummyClassForTest(instance_name="non default 1")
+    _2 = _FirstDummyClassForTest(instance_name="non default 2")
+    _3 = _FirstDummyClassForTest(instance_name="non default 3")
+
+    instances = Component.get_all(_FirstDummyClassForTest, names=["Non default 1", "default 3"])
+
+    assert len(instances) == 0
+
+
+def test_get_all_with_pattern_name_when_some_match(purge):
+    instance_1 = _FirstDummyClassForTest(instance_name="non default 1")
+    _ = _FirstDummyClassForTest(instance_name="non default 2")
+    instance_3 = _FirstDummyClassForTest(instance_name="non default 3")
+
+    instances = Component.get_all(_FirstDummyClassForTest, pattern=".*[13]")
+
+    assert len(instances) == 2
+
+    assert "non default 1" in instances
+    assert instances["non default 1"] is instance_1
+
+    assert "non default 2" not in instances
+
+    assert "non default 3" in instances
+    assert instances["non default 3"] is instance_3
+
+
+def test_get_all_with_pattern_name_when_none_match(purge):
+    _1 = _FirstDummyClassForTest(instance_name="non default 1")
+    _2 = _FirstDummyClassForTest(instance_name="non default 2")
+    _3 = _FirstDummyClassForTest(instance_name="non default 3")
+
+    instances = Component.get_all(_FirstDummyClassForTest, pattern="Non DEFAULT [1-3]")
+
+    assert len(instances) == 0
+
+
+def test_get_all_with_name_and_pattern_when_some_match_with_no_overlap(purge):
+    instance_1 = _FirstDummyClassForTest(instance_name="non default 1")
+    _ = _FirstDummyClassForTest(instance_name="non default 2")
+    instance_3 = _FirstDummyClassForTest(instance_name="non default 3")
+    instance_4 = _FirstDummyClassForTest(instance_name="Non Default 4")
+
+    instances = Component.get_all(_FirstDummyClassForTest, names=["non default 1"], pattern="[Nn]on [Dd]efault [3-4]")
+
+    assert len(instances) == 3
+
+    assert "non default 1" in instances
+    assert instances["non default 1"] is instance_1
+
+    assert "non default 2" not in instances
+
+    assert "non default 3" in instances
+    assert instances["non default 3"] is instance_3
+
+    assert "Non Default 4" in instances
+    assert instances["Non Default 4"] is instance_4
+
+
+def test_get_all_with_name_and_pattern_when_some_match_with_overlap(purge):
+    instance_1 = _FirstDummyClassForTest(instance_name="non default 1")
+    _ = _FirstDummyClassForTest(instance_name="non default 2")
+    instance_3 = _FirstDummyClassForTest(instance_name="non default 3")
+    instance_4 = _FirstDummyClassForTest(instance_name="Non Default 4")
+
+    instances = Component.get_all(_FirstDummyClassForTest, names=["non default 1"], pattern="[Nn]on [Dd]efault [134]")
+
+    assert len(instances) == 3
+
+    assert "non default 1" in instances
+    assert instances["non default 1"] is instance_1
+
+    assert "non default 2" not in instances
+
+    assert "non default 3" in instances
+    assert instances["non default 3"] is instance_3
+
+    assert "Non Default 4" in instances
+    assert instances["Non Default 4"] is instance_4
+
+
+def test_get_all_with_name_and_pattern_when_none_match(purge):
+    _1 = _FirstDummyClassForTest(instance_name="non default 1")
+    _2 = _FirstDummyClassForTest(instance_name="non default 2")
+    _3 = _FirstDummyClassForTest(instance_name="non default 3")
+
+    instances = Component.get_all(_FirstDummyClassForTest, pattern="Non DEFAULT [1-3]", names=["non default 4", "non default 5"])
+
+    assert len(instances) == 0
