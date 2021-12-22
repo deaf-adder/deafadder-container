@@ -29,24 +29,26 @@ class Scope(Enum):
     PROTOTYPE = auto()
 
 
-@dataclass
 class _NamedInstance:
     """Used internally to represent a named component instance"""
-    name: str
-    instance: Any
+
+    def __init__(self, name: str, instance: any, tags: List[str] = None):
+        self.name = name
+        self.instance = instance
+        self.tags = tags or []
 
 
 class Component(type):
     _instances: Dict[Any, List[_NamedInstance]] = {}
     _lock: Lock = Lock()
 
-    def __call__(cls, instance_name: str = DEFAULT_INSTANCE_NAME, scope: Scope = Scope.SINGLETON, *args, **kwargs):
+    def __call__(cls, instance_name: str = DEFAULT_INSTANCE_NAME, scope: Scope = Scope.SINGLETON, tags: List[str] = None, *args, **kwargs):
         if scope == Scope.SINGLETON:
-            return cls._singleton_scope_handler(instance_name, *args, **kwargs)
+            return cls._singleton_scope_handler(instance_name, tags=tags, *args, **kwargs)
         elif scope == Scope.PROTOTYPE:
             return cls._prototype_scope_handler(*args, **kwargs)
 
-    def _singleton_scope_handler(cls, instance_name: str, *args, **kwargs):
+    def _singleton_scope_handler(cls, instance_name: str, tags: List[str] = None, *args, **kwargs):
         """Create or retrieve the correct Singleton for the given class.
 
         For creation, perform autowiring when needed and post initialization when the _post_init method is
@@ -72,7 +74,7 @@ class Component(type):
 
                 _apply_post_init(new_instance)
 
-                cls._instances[cls].append(_NamedInstance(name=instance_name, instance=new_instance))
+                cls._instances[cls].append(_NamedInstance(name=instance_name, instance=new_instance, tags=tags))
         container_entry = cls._get_entry_for_name(cls, instance_name)
         log.debug(f"(__call__ {cls}, {instance_name}) Instance found.")
         return container_entry.instance
@@ -138,7 +140,7 @@ class Component(type):
             raise InstanceNotFound(f"Unable to find an instance for {actual_class} with name '{instance_name}'")
 
     @staticmethod
-    def get_all(cls, pattern: str = None, names: List[str] = None) -> Dict[str, Any]:
+    def get_all(cls, pattern: str = None, names: List[str] = None, tags: List[str] = None) -> Dict[str, Any]:
         """ Get all registered instance of a given Component as a dict of name:instance
 
          -----------------------------------------------
@@ -163,20 +165,21 @@ class Component(type):
         if type(cls) is Component:
             return Component._get_all(cls, cls, pattern=pattern, names=names)
         else:
-            return Component._get_all(_Anchor, cls)
+            return Component._get_all(_Anchor, cls, pattern=pattern, names=names)
 
-    def _get_all(cls, actual_class, pattern: str = None, names: List[str] = None) -> Dict[str, Any]:
+    def _get_all(cls, actual_class, pattern: str = None, names: List[str] = None, tags: List[str] = None) -> Dict[str, Any]:
         """Anchor method to let static method access inner field such as lock and instance."""
         with cls._lock:
             if actual_class not in cls._instances:
                 return {}
             else:
-                if pattern is None and names is None:
+                if pattern is None and names is None and tags is None:
                     return {i.name: i.instance for i in cls._instances[actual_class]}
                 else:
                     return {i.name: i.instance for i in cls._instances[actual_class]
                             if cls._name_match_pattern(i.name, pattern)
-                            or cls._name_in_wanted_name_list(i.name, names)}
+                            or cls._name_in_wanted_name_list(i.name, names)
+                            or cls._tag_in_anted_tag_list(i.tags, tags)}
 
     @staticmethod
     def _name_match_pattern(name: str, pattern: str = None) -> bool:
@@ -185,6 +188,10 @@ class Component(type):
     @staticmethod
     def _name_in_wanted_name_list(name: str, name_list: List[str] = None):
         return name in name_list if name_list is not None else False
+
+    @staticmethod
+    def _tag_in_anted_tag_list(instance_tags: List[str],  wanted_tags: List[str] = None) -> bool:
+        return any(x in instance_tags for x in wanted_tags) if wanted_tags is not None else False
 
     @staticmethod
     def delete(cls, instance_name: str = DEFAULT_INSTANCE_NAME):
