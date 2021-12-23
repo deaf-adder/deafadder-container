@@ -470,3 +470,25 @@ def test_get_all_with_name_and_pattern_when_none_match(purge):
     instances = Component.get_all(_FirstDummyClassForTest, pattern="Non DEFAULT [1-3]", names=["non default 4", "non default 5"])
 
     assert len(instances) == 0
+
+
+def test_get_all_with_tags(purge):
+    instance_1 = _FirstDummyClassForTest(instance_name="one", tags=["first", "second"])
+    instance_2 = _FirstDummyClassForTest(instance_name="two", tags=["second", "third"])
+    _ = _FirstDummyClassForTest(instance_name="three", tags=["third", "fourth"])
+    instance_4 = _FirstDummyClassForTest(instance_name="four", tags=["fourth", "fifth", "sixth"])
+
+    instances = Component.get_all(_FirstDummyClassForTest, tags=["second", "sixth"])
+
+    assert len(instances) == 3
+
+    assert "one" in instances
+    assert instances["one"] is instance_1
+
+    assert "two" in instances
+    assert instances["two"] is instance_2
+
+    assert "three" not in instances
+
+    assert "four" in instances
+    assert instances["four"] is instance_4

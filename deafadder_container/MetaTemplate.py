@@ -163,9 +163,9 @@ class Component(type):
         :return: a dictionary containing all hte instance for the given class, as Dict[name:instance]
         """
         if type(cls) is Component:
-            return Component._get_all(cls, cls, pattern=pattern, names=names)
+            return Component._get_all(cls, cls, pattern=pattern, names=names, tags=tags)
         else:
-            return Component._get_all(_Anchor, cls, pattern=pattern, names=names)
+            return Component._get_all(_Anchor, cls, pattern=pattern, names=names, tags=tags)
 
     def _get_all(cls, actual_class, pattern: str = None, names: List[str] = None, tags: List[str] = None) -> Dict[str, Any]:
         """Anchor method to let static method access inner field such as lock and instance."""
