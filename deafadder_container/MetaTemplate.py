@@ -160,26 +160,31 @@ class Component(type):
         :param cls: the class for which you want to get all instances
         :param pattern: a regex that describe the names of the instances you want to retrieve
         :param names: the list of names of the instances you want to retrieve
+        :param tags: a list of tags that the instances you want to retrieve contains
         :return: a dictionary containing all hte instance for the given class, as Dict[name:instance]
         """
-        if type(cls) is Component:
-            return Component._get_all(cls, cls, pattern=pattern, names=names, tags=tags)
-        else:
-            return Component._get_all(_Anchor, cls, pattern=pattern, names=names, tags=tags)
+        return Component._get_all_with_lock_context(
+            cls if type(cls) is Component else _Anchor,
+            cls, pattern=pattern, names=names, tags=tags
+        )
+
+    def _get_all_with_lock_context(cls, actual_class, pattern: str = None, names: List[str] = None, tags: List[str] = None) -> Dict[str, Any]:
+        """Anchor method to let static method access inner field such as lock and instance."""
+        with cls._lock:
+            return Component._get_all(cls, actual_class, pattern=pattern, names=names, tags=tags)
 
     def _get_all(cls, actual_class, pattern: str = None, names: List[str] = None, tags: List[str] = None) -> Dict[str, Any]:
         """Anchor method to let static method access inner field such as lock and instance."""
-        with cls._lock:
-            if actual_class not in cls._instances:
-                return {}
+        if actual_class not in cls._instances:
+            return {}
+        else:
+            if pattern is None and names is None and tags is None:
+                return {i.name: i.instance for i in cls._instances[actual_class]}
             else:
-                if pattern is None and names is None and tags is None:
-                    return {i.name: i.instance for i in cls._instances[actual_class]}
-                else:
-                    return {i.name: i.instance for i in cls._instances[actual_class]
-                            if cls._name_match_pattern(i.name, pattern)
-                            or cls._name_in_wanted_name_list(i.name, names)
-                            or cls._tag_in_anted_tag_list(i.tags, tags)}
+                return {i.name: i.instance for i in cls._instances[actual_class]
+                        if cls._name_match_pattern(i.name, pattern)
+                        or cls._name_in_wanted_name_list(i.name, names)
+                        or cls._tag_in_anted_tag_list(i.tags, tags)}
 
     @staticmethod
     def _name_match_pattern(name: str, pattern: str = None) -> bool:
@@ -219,21 +224,26 @@ class Component(type):
         :return:  Nothing
         :raises: InstanceNotFound exception if there is no instance of the given class with the given name
         """
-        if type(cls) is Component:
-            Component._delete(cls, cls, instance_name=instance_name)
-        else:
-            Component._delete(_Anchor, cls, instance_name=instance_name)
+        Component._delete_with_lock_context(
+            cls if type(cls) is Component else _Anchor,
+            cls, instance_name=instance_name
+        )
+
+    def _delete_with_lock_context(cls, actual_class, instance_name: str = DEFAULT_INSTANCE_NAME):
+        """Anchor method to let static method access inner field such as lock and instance."""
+        with cls._lock:
+            Component._delete(cls, actual_class, instance_name=instance_name)
 
     def _delete(cls, actual_class, instance_name: str = DEFAULT_INSTANCE_NAME):
-        with cls._lock:
-            if actual_class in cls._instances and instance_name in cls._known_instance_name_for_class(actual_class):
-                log.debug(f"(delete {actual_class}, {instance_name}) Deleting instance")
-                cls._instances[actual_class] = list(filter(lambda i: i.name != instance_name, cls._instances[actual_class]))
-            else:
-                raise InstanceNotFound(f"Unable to find an instance for {actual_class} with name '{instance_name}'")
+        """Anchor method to let static method access inner field such as lock and instance."""
+        if actual_class in cls._instances and instance_name in cls._known_instance_name_for_class(actual_class):
+            log.debug(f"(delete {actual_class}, {instance_name}) Deleting instance")
+            cls._instances[actual_class] = list(filter(lambda i: i.name != instance_name, cls._instances[actual_class]))
+        else:
+            raise InstanceNotFound(f"Unable to find an instance for {actual_class} with name '{instance_name}'")
 
     @staticmethod
-    def delete_all(cls) -> None:
+    def delete_all(cls, pattern: str = None, names: List[str] = None, tags: List[str] = None) -> None:
         """Remove all instance of the given Component from the possible references.
 
         -----------------------------------------------
@@ -256,20 +266,25 @@ class Component(type):
         :return: Nothing
         """
         if type(cls) is Component:
-            Component._delete_all(cls, cls)
+            Component._delete_all(cls, cls, pattern=pattern, names=names, tags=tags)
         else:
-            Component._delete_all(_Anchor, cls)
+            Component._delete_all(_Anchor, cls, pattern=pattern, names=names, tags=tags)
 
-    def _delete_all(cls, actual_class) -> None:
+    def _delete_all(cls, actual_class, pattern: str = None, names: List[str] = None, tags: List[str] = None) -> None:
         """Anchor method to let static method access inner field such as lock and instance."""
         with cls._lock:
-            if actual_class in cls._instances:
-                log.debug(f"(delete_all) Deleting all entries for {actual_class}.")
-                deleted_classes_string = str(cls._instances[actual_class])
-                cls._instances.pop(actual_class)
-                log.debug(f"(delete_all) Entries deleted: {deleted_classes_string}")
-            else:
+            instances = cls._get_all(actual_class, pattern=pattern, names=names, tags=tags)
+
+            if not instances:
                 log.debug(f"(delete_all) Nothing to do. No instance found for class {actual_class}")
+            else:
+                log.debug(f"(delete_all) Deleting entries for {actual_class}.")
+                deleted_classes_string = str(instances.keys())
+                for key in instances:
+                    Component._delete(cls, actual_class, instance_name=key)
+                if not cls._instances[actual_class]:
+                    cls._instances.pop(actual_class)
+                log.debug(f"(delete_all) Entries deleted: {deleted_classes_string}")
 
     @staticmethod
     def purge():

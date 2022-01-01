@@ -492,3 +492,93 @@ def test_get_all_with_tags(purge):
 
     assert "four" in instances
     assert instances["four"] is instance_4
+
+
+def test_delete_all_with_name_when_some_match(purge):
+    _1 = _FirstDummyClassForTest(instance_name="one")
+    _2 = _FirstDummyClassForTest(instance_name="two")
+    instance_3 = _FirstDummyClassForTest(instance_name="three")
+
+    Component.delete_all(_FirstDummyClassForTest, names=["one", "two"])
+
+    with pytest.raises(InstanceNotFound):
+        Component.get(_FirstDummyClassForTest, "one")
+
+    with pytest.raises(InstanceNotFound):
+        Component.get(_FirstDummyClassForTest, "two")
+
+    assert Component.get(_FirstDummyClassForTest, "three") is instance_3
+    assert len(Component.get_all(_FirstDummyClassForTest)) == 1
+
+
+def test_delete_all_with_name_when_none_match(purge):
+    instance_1 = _FirstDummyClassForTest(instance_name="one")
+    instance_2 = _FirstDummyClassForTest(instance_name="two")
+    instance_3 = _FirstDummyClassForTest(instance_name="three")
+
+    Component.delete_all(_FirstDummyClassForTest, names=["four"])
+
+    assert len(Component.get_all(_FirstDummyClassForTest)) == 3
+    assert Component.get(_FirstDummyClassForTest, "one") is instance_1
+    assert Component.get(_FirstDummyClassForTest, "two") is instance_2
+    assert Component.get(_FirstDummyClassForTest, "three") is instance_3
+
+
+def test_delete_all_with_pattern_when_some_match(purge):
+    _1 = _FirstDummyClassForTest(instance_name="default one")
+    _2 = _FirstDummyClassForTest(instance_name="default two")
+    instance_3 = _FirstDummyClassForTest(instance_name="DEFAULT three")
+
+    Component.delete_all(_FirstDummyClassForTest, pattern="default .*")
+
+    with pytest.raises(InstanceNotFound):
+        Component.get(_FirstDummyClassForTest, "default one")
+
+    with pytest.raises(InstanceNotFound):
+        Component.get(_FirstDummyClassForTest, "default two")
+
+    assert Component.get(_FirstDummyClassForTest, "DEFAULT three") is instance_3
+    assert len(Component.get_all(_FirstDummyClassForTest)) == 1
+
+
+def test_delete_all_with_pattern_when_none_match(purge):
+    instance_1 = _FirstDummyClassForTest(instance_name="default one")
+    instance_2 = _FirstDummyClassForTest(instance_name="default two")
+    instance_3 = _FirstDummyClassForTest(instance_name="DEFAULT three")
+
+    Component.delete_all(_FirstDummyClassForTest, pattern="Default .*")
+
+    assert len(Component.get_all(_FirstDummyClassForTest)) == 3
+    assert Component.get(_FirstDummyClassForTest, "default one") is instance_1
+    assert Component.get(_FirstDummyClassForTest, "default two") is instance_2
+    assert Component.get(_FirstDummyClassForTest, "DEFAULT three") is instance_3
+
+
+def test_delete_all_with_tags_when_some_match(purge):
+    _1 = _FirstDummyClassForTest(instance_name="one", tags=["one", "two"])
+    _2 = _FirstDummyClassForTest(instance_name="two", tags=["two", "three"])
+    instance_3 = _FirstDummyClassForTest(instance_name="three", tags=["three", "four"])
+
+    Component.delete_all(_FirstDummyClassForTest, tags=["two"])
+
+    with pytest.raises(InstanceNotFound):
+        Component.get(_FirstDummyClassForTest, "one")
+
+    with pytest.raises(InstanceNotFound):
+        Component.get(_FirstDummyClassForTest, "two")
+
+    assert Component.get(_FirstDummyClassForTest, "three") is instance_3
+    assert len(Component.get_all(_FirstDummyClassForTest)) == 1
+
+
+def test_delete_all_with_tags_when_none_match(purge):
+    instance_1 = _FirstDummyClassForTest(instance_name="one", tags=["one", "two"])
+    instance_2 = _FirstDummyClassForTest(instance_name="two", tags=["two", "three"])
+    instance_3 = _FirstDummyClassForTest(instance_name="three", tags=["three", "four"])
+
+    Component.delete_all(_FirstDummyClassForTest, tags=["five"])
+
+    assert len(Component.get_all(_FirstDummyClassForTest)) == 3
+    assert Component.get(_FirstDummyClassForTest, "one") is instance_1
+    assert Component.get(_FirstDummyClassForTest, "two") is instance_2
+    assert Component.get(_FirstDummyClassForTest, "three") is instance_3
