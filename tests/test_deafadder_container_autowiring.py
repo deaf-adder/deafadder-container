@@ -1,3 +1,5 @@
+from typing import List, Dict
+
 import pytest
 
 from deafadder_container.ContainerException import AnnotatedDeclarationMissing, MultipleAutowireReference, InstanceNotFound
@@ -290,3 +292,16 @@ def test_autowiring_with_component_of_and_non_existing_named_instance():
 
     assert type(raised.value) is InstanceNotFound
     assert str(raised.value) == f"Unable to find an instance for {normal_class_as_component.__class__} with name 'non default'"
+
+
+class ListAutowireClass(metaclass=Component):
+    l: List[_Dummy1]
+    d: Dict[str, _Dummy1]
+    nl: _Dummy1
+
+
+def test_list_autowire():
+    instance_default = _Dummy1()
+    instance_bis = _Dummy1(instance_name="bis")
+
+    instance = ListAutowireClass()

@@ -2,6 +2,7 @@ import inspect
 import ast
 import logging
 import re
+import typing
 
 from enum import auto, Enum
 from dataclasses import dataclass
@@ -365,6 +366,20 @@ class _Anchor(metaclass=Component):
     pass
 
 
+class _AutowireType(Enum):
+    INSTANCE = auto()
+    LIST = auto()
+    DICT = auto()
+
+    @staticmethod
+    def from_generic(generic_alias):
+        if type(generic_alias) is typing._GenericAlias:
+            if generic_alias.__origin__ is list:
+                return _AutowireType.LIST
+            if generic_alias.__origin__ is dict:
+                return _AutowireType.DICT
+
+
 @dataclass
 class _AutowireCandidate:
     """Used internally for autowiring mechanism.
@@ -374,6 +389,25 @@ class _AutowireCandidate:
     attribute_name: str
     component_instance_name: str
     component_class: Any
+    autowire_type: _AutowireType
+
+
+class _AutowireCandidateBis:
+
+    attribute_name: str
+    component_instance_name: List[str]
+    component_class: Any
+    autowire_type: _AutowireType
+
+    def __init__(self,
+                 attribute_name: str = None,
+                 component_instance_name: List[str] = None,
+                 component_class: Any = None,
+                 autowire_type: _AutowireType = None):
+        self.attribute_name = attribute_name
+        self.component_instance_name = component_instance_name or []
+        self.component_class = component_class
+        self.autowire_type = autowire_type
 
 
 class _AutowireMechanism:
@@ -390,6 +424,7 @@ class _AutowireMechanism:
     """
     autowire_triplet_candidates: List[_AutowireCandidate] = []
     _autowire_candidates = []
+    _autowire_candidates_bis: List[_AutowireCandidateBis] = []
     _autowire_non_default_candidates: List[_AutowireCandidate] = []
     _autowire_default_candidates: List[_AutowireCandidate] = []
     _instance = None
@@ -440,6 +475,12 @@ class _AutowireMechanism:
         self._autowire_candidates = [(k, annotations[k]) for (k, v) in annotations.items()
                                      if not hasattr(self._instance, k)
                                      and self._is_component(v)]
+        self._autowire_candidates_bis = [_AutowireCandidateBis(attribute_name=k,
+                                                               component_class=self._base_component_class(v),
+                                                               autowire_type=self._get_injection_type(v))
+                                         for (k, v) in annotations.items()
+                                         if not hasattr(self._instance, k)
+                                         and (self._is_component(v) or self._is_collection_of_component(v))]
 
     @staticmethod
     def _is_component(clazz) -> bool:
@@ -449,6 +490,32 @@ class _AutowireMechanism:
             return True
         else:
             return False
+
+    @staticmethod
+    def _is_collection_of_component(clazz) -> bool:
+        if type(clazz) is typing._GenericAlias and clazz.__origin__ in (list, dict):
+            if clazz.__origin__ is list:
+                return _AutowireMechanism._is_component(clazz.__args__[0])
+            if clazz.__origin__ is dict:
+                return _AutowireMechanism._is_component(clazz.__args__[1])
+        return False
+
+    @staticmethod
+    def _base_component_class(clazz):
+        if _AutowireMechanism._is_component(clazz):
+            return clazz
+        if type(clazz) is typing._GenericAlias:
+            if clazz.__origin__ is list and _AutowireMechanism._is_component(clazz.__args__[0]):
+                return clazz.__args__[0]
+            if clazz.__origin__ is dict and _AutowireMechanism._is_component(clazz.__args__[1]):
+                return clazz.__args__[1]
+
+    @staticmethod
+    def _get_injection_type(clazz):
+        if _AutowireMechanism._is_component(clazz):
+            return _AutowireType.INSTANCE
+        if _AutowireMechanism._is_collection_of_component(clazz):
+            return _AutowireType.from_generic(clazz)
 
     @staticmethod
     def _get_init_decorators(cls):
@@ -505,7 +572,8 @@ class _AutowireMechanism:
         self._autowire_non_default_candidates = [
             _AutowireCandidate(attribute_name=i[0],
                                component_instance_name=i[1],
-                               component_class=all_autowire_candidate[i[0]])
+                               component_class=all_autowire_candidate[i[0]],
+                               autowire_type=_AutowireType.INSTANCE)
             for i in flattened_args
         ]
 
@@ -529,7 +597,8 @@ class _AutowireMechanism:
         self._autowire_default_candidates = [
             _AutowireCandidate(attribute_name=i,
                                component_instance_name=DEFAULT_INSTANCE_NAME,
-                               component_class=all_candidates_as_dict[i])
+                               component_class=all_candidates_as_dict[i],
+                               autowire_type=_AutowireType.INSTANCE)
             for i in default_candidates
         ]
 
