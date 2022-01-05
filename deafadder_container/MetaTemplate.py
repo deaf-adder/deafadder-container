@@ -1,3 +1,4 @@
+import _ast
 import inspect
 import ast
 import logging
@@ -6,6 +7,7 @@ import typing
 
 from enum import auto, Enum
 from dataclasses import dataclass
+from operator import attrgetter, itemgetter
 from threading import Lock
 from typing import Any, Dict, List, Optional, Match
 from deafadder_container.ContainerException import InstanceNotFound, MultipleAutowireReference, \
@@ -409,6 +411,17 @@ class _AutowireCandidateBis:
         self.component_class = component_class
         self.autowire_type = autowire_type
 
+    def set(self,
+            attribute_name: str = None,
+            component_instance_name: List[str] = None,
+            component_class: Any = None,
+            autowire_type: _AutowireType = None):
+        self.attribute_name = attribute_name or self.attribute_name
+        self.component_instance_name = component_instance_name or self.component_instance_name
+        self.component_class = component_class or self.component_class
+        self.autowire_type = autowire_type or self.autowire_type
+        return self
+
 
 class _AutowireMechanism:
     """Package the autowiring mechanism
@@ -423,9 +436,8 @@ class _AutowireMechanism:
     retrieve the correct instance to inject into the correct fields.
     """
     autowire_triplet_candidates: List[_AutowireCandidate] = []
-    _autowire_candidates = []
-    _autowire_candidates_bis: List[_AutowireCandidateBis] = []
-    _autowire_non_default_candidates: List[_AutowireCandidate] = []
+    _autowire_candidates: List[_AutowireCandidateBis] = []
+    _autowire_non_default_candidates: List[_AutowireCandidateBis] = []
     _autowire_default_candidates: List[_AutowireCandidate] = []
     _instance = None
     _cls = None
@@ -472,10 +484,7 @@ class _AutowireMechanism:
 
     def _infer_autowire_candidates(self):
         annotations = self._instance.__annotations__
-        self._autowire_candidates = [(k, annotations[k]) for (k, v) in annotations.items()
-                                     if not hasattr(self._instance, k)
-                                     and self._is_component(v)]
-        self._autowire_candidates_bis = [_AutowireCandidateBis(attribute_name=k,
+        self._autowire_candidates = [_AutowireCandidateBis(attribute_name=k,
                                                                component_class=self._base_component_class(v),
                                                                autowire_type=self._get_injection_type(v))
                                          for (k, v) in annotations.items()
@@ -523,6 +532,21 @@ class _AutowireMechanism:
         target = cls
         init_decorators = {}
 
+        def get_string_value(decorator_arg: _ast.keyword) -> List[str]:
+            elements = []
+
+            # if the keyword is a simple element, like a string, then we the keyword.value has a value attribute
+            # that contains the string
+            # else, it is a list keyword and it contains an elts attribute where each element has a value attribute
+            if hasattr(decorator_arg.value, "value"):
+                elements.append(decorator_arg.value.value)
+            elif hasattr(decorator_arg.value, "elts"):
+                for e in decorator_arg.value.elts:
+                    elements.append(e.value)
+            else:
+                pass
+            return elements
+
         def visit_function_def(node):
             if node.name != "__init__":
                 return
@@ -531,7 +555,9 @@ class _AutowireMechanism:
                 name = ''
                 if isinstance(n, ast.Call):
                     name = n.func.attr if isinstance(n.func, ast.Attribute) else n.func.id
-                    decorator_args = [(decorator_arg.arg, decorator_arg.value.value) for decorator_arg in n.keywords]
+                    if name != "autowire":
+                        continue
+                    decorator_args = [(decorator_arg.arg, get_string_value(decorator_arg)) for decorator_arg in n.keywords]
                 # to be complete, the decorator without parenthesis should be included. But since we
                 # don't really need it, we can ignore it for now
                 #
@@ -562,19 +588,20 @@ class _AutowireMechanism:
         if len(duplicate_args) > 0:
             raise MultipleAutowireReference(f"The following arguments are referenced multiple times in autowire: {', '.join(duplicate_args)}")
 
-        annotated_elements = [i[0] for i in self._autowire_candidates]
+        annotated_elements = [i.attribute_name for i in self._autowire_candidates]
         not_annotated_elements_in_explicit_autowire = [i for i in all_args_name if i not in annotated_elements]
         if len(not_annotated_elements_in_explicit_autowire) > 0:
             raise AnnotatedDeclarationMissing(f"Elements to autowire '{', '.join(not_annotated_elements_in_explicit_autowire)}'"
                                               f" should be defined and annotated at class level.")
 
-        all_autowire_candidate = {i[0]: i[1] for i in self._autowire_candidates}
+        autowire_non_default_candidates_dict = {
+            candidate.attribute_name: candidate
+            for candidate in self._autowire_candidates
+            if candidate.attribute_name in all_args_name
+        }
         self._autowire_non_default_candidates = [
-            _AutowireCandidate(attribute_name=i[0],
-                               component_instance_name=i[1],
-                               component_class=all_autowire_candidate[i[0]],
-                               autowire_type=_AutowireType.INSTANCE)
-            for i in flattened_args
+            autowire_non_default_candidates_dict[t[0]].set(component_instance_name=t[1])
+            for t in flattened_args
         ]
 
     @staticmethod

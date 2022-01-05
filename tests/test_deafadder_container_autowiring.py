@@ -1,3 +1,4 @@
+from functools import wraps
 from typing import List, Dict
 
 import pytest
@@ -294,10 +295,25 @@ def test_autowiring_with_component_of_and_non_existing_named_instance():
     assert str(raised.value) == f"Unable to find an instance for {normal_class_as_component.__class__} with name 'non default'"
 
 
+def my_auto(**kwargs):
+    def decorator_autowire(init):
+        @wraps(init)
+        def wrapper_decorator(*init_args, **init_kwargs):
+            instance = init(*init_args, **init_kwargs)
+            return instance
+        return wrapper_decorator
+    return decorator_autowire
+
 class ListAutowireClass(metaclass=Component):
     l: List[_Dummy1]
     d: Dict[str, _Dummy1]
     nl: _Dummy1
+
+    @my_auto(l="", d="", nl="")
+    @my_auto(l="", d="", nl="")
+    @autowire(l=["one", "two"], d=["three", "four"], nl="test")
+    def __init__(self):
+        pass
 
 
 def test_list_autowire():
