@@ -296,6 +296,13 @@ def test_autowiring_with_component_of_and_non_existing_named_instance():
 
 
 def my_auto(**kwargs):
+    """
+    This decorator exist only to make sure the autowiring mechanism only take
+    into account the "autowire" one
+
+    :param kwargs:
+    :return:
+    """
     def decorator_autowire(init):
         @wraps(init)
         def wrapper_decorator(*init_args, **init_kwargs):
@@ -305,19 +312,22 @@ def my_auto(**kwargs):
     return decorator_autowire
 
 class ListAutowireClass(metaclass=Component):
-    l: List[_Dummy1]
-    d: Dict[str, _Dummy1]
-    nl: _Dummy1
+    l: List[_Dummy3]
+    d: Dict[str, _Dummy3]
+    nl: _Dummy3
 
     @my_auto(l="", d="", nl="")
     @my_auto(l="", d="", nl="")
-    @autowire(l=["one", "two"], d=["three", "four"], nl="test")
+    @autowire(d=["non default 1", "default"], nl="non default 2")
     def __init__(self):
         pass
 
 
-def test_list_autowire():
-    instance_default = _Dummy1()
-    instance_bis = _Dummy1(instance_name="bis")
-
+def test_list_autowire(dummy3_default, dummy3_non_default_1, dummy3_non_default_2):
     instance = ListAutowireClass()
+
+    assert len(instance.l) == 3
+    assert len(instance.d) == 2
+
+    assert "non default 1" in instance.d
+    assert "default" in instance.d

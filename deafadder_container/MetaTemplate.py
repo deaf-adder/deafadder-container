@@ -429,9 +429,6 @@ class _AutowireCandidate:
     def is_collection(self):
         return self.autowire_type is not None and self.autowire_type.is_collection()
 
-    def is_list_collection(self):
-        return self.autowire_type is not None and self.autowire_type is _AutowireType.LIST
-
     def is_dict_collection(self):
         return self.autowire_type is not None and self.autowire_type is _AutowireType.DICT
 
