@@ -311,6 +311,7 @@ def my_auto(**kwargs):
         return wrapper_decorator
     return decorator_autowire
 
+
 class ListAutowireClass(metaclass=Component):
     l: List[_Dummy3]
     d: Dict[str, _Dummy3]

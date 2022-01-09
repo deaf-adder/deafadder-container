@@ -6,10 +6,8 @@ import re
 import typing
 
 from enum import auto, Enum
-from dataclasses import dataclass
-from operator import attrgetter, itemgetter
 from threading import Lock
-from typing import Any, Dict, List, Optional, Match
+from typing import Any, Dict, List
 from deafadder_container.ContainerException import InstanceNotFound, MultipleAutowireReference, \
     AnnotatedDeclarationMissing
 
@@ -164,6 +162,8 @@ class Component(type):
         :param pattern: a regex that describe the names of the instances you want to retrieve
         :param names: the list of names of the instances you want to retrieve
         :param tags: a list of tags that the instances you want to retrieve contains
+        :param dirty_context: a bool to tell if we want to use the lock mechanism or not. This parameter
+                              should only be used for internal use in the library
         :return: a dictionary containing all hte instance for the given class, as Dict[name:instance]
         """
         if not dirty_context:
@@ -204,7 +204,7 @@ class Component(type):
         return name in name_list if name_list is not None else False
 
     @staticmethod
-    def _tag_in_anted_tag_list(instance_tags: List[str],  wanted_tags: List[str] = None) -> bool:
+    def _tag_in_anted_tag_list(instance_tags: List[str], wanted_tags: List[str] = None) -> bool:
         return any(x in instance_tags for x in wanted_tags) if wanted_tags is not None else False
 
     @staticmethod
@@ -581,6 +581,11 @@ class _AutowireMechanism:
                 if isinstance(n, ast.Call):
                     name = n.func.attr if isinstance(n.func, ast.Attribute) else n.func.id
                     if name != "autowire":
+                        # might have an issue if the decorator is not exactly @autowire (like
+                        # with renaming on import or full import @deafadder_container.Wiring.autowire
+                        # or @Wiring.autowire. Will see later if there is an issue or a better way to do so
+                        # Could also cause an issue if we have another decorator from another package called
+                        # autowire.
                         continue
                     decorator_args = [(decorator_arg.arg, get_string_value(decorator_arg)) for decorator_arg in n.keywords]
                 # to be complete, the decorator without parenthesis should be included. But since we
