@@ -94,7 +94,7 @@ class Component(type):
         """
         with cls._lock:
             new_instance = super().__call__(*args, **kwargs)
-            _AutowireMechanism(new_instance, cls, "<prototype>")
+            _AutowireMechanism(new_instance, cls, "<prototype>").apply()
             _apply_post_init(new_instance)
         return new_instance
 
@@ -143,7 +143,7 @@ class Component(type):
             raise InstanceNotFound(f"Unable to find an instance for {actual_class} with name '{instance_name}'")
 
     @staticmethod
-    def get_all(cls, pattern: str = None, names: List[str] = None, tags: List[str] = None) -> Dict[str, Any]:
+    def get_all(cls, pattern: str = None, names: List[str] = None, tags: List[str] = None, dirty_context: bool = False) -> Dict[str, Any]:
         """ Get all registered instance of a given Component as a dict of name:instance
 
          -----------------------------------------------
@@ -166,10 +166,16 @@ class Component(type):
         :param tags: a list of tags that the instances you want to retrieve contains
         :return: a dictionary containing all hte instance for the given class, as Dict[name:instance]
         """
-        return Component._get_all_with_lock_context(
-            cls if type(cls) is Component else _Anchor,
-            cls, pattern=pattern, names=names, tags=tags
-        )
+        if not dirty_context:
+            return Component._get_all_with_lock_context(
+                cls if type(cls) is Component else _Anchor,
+                cls, pattern=pattern, names=names, tags=tags
+            )
+        else:
+            return Component._get_all(
+                cls if type(cls) is Component else _Anchor,
+                cls, pattern=pattern, names=names, tags=tags
+            )
 
     def _get_all_with_lock_context(cls, actual_class, pattern: str = None, names: List[str] = None, tags: List[str] = None) -> Dict[str, Any]:
         """Anchor method to let static method access inner field such as lock and instance."""
@@ -381,20 +387,15 @@ class _AutowireType(Enum):
             if generic_alias.__origin__ is dict:
                 return _AutowireType.DICT
 
+    def is_collection(self):
+        return self in [_AutowireType.LIST, _AutowireType.DICT]
 
-@dataclass
+
 class _AutowireCandidate:
     """Used internally for autowiring mechanism.
     It groups together the attribute to autowire in the Component, the component instance name to use and the component class to use
     for injection.
     """
-    attribute_name: str
-    component_instance_name: str
-    component_class: Any
-    autowire_type: _AutowireType
-
-
-class _AutowireCandidateBis:
 
     attribute_name: str
     component_instance_name: List[str]
@@ -422,6 +423,18 @@ class _AutowireCandidateBis:
         self.autowire_type = autowire_type or self.autowire_type
         return self
 
+    def is_default(self):
+        return len(self.component_instance_name) == 0
+
+    def is_collection(self):
+        return self.autowire_type is not None and self.autowire_type.is_collection()
+
+    def is_list_collection(self):
+        return self.autowire_type is not None and self.autowire_type is _AutowireType.LIST
+
+    def is_dict_collection(self):
+        return self.autowire_type is not None and self.autowire_type is _AutowireType.DICT
+
 
 class _AutowireMechanism:
     """Package the autowiring mechanism
@@ -436,8 +449,8 @@ class _AutowireMechanism:
     retrieve the correct instance to inject into the correct fields.
     """
     autowire_triplet_candidates: List[_AutowireCandidate] = []
-    _autowire_candidates: List[_AutowireCandidateBis] = []
-    _autowire_non_default_candidates: List[_AutowireCandidateBis] = []
+    _autowire_candidates: List[_AutowireCandidate] = []
+    _autowire_non_default_candidates: List[_AutowireCandidate] = []
     _autowire_default_candidates: List[_AutowireCandidate] = []
     _instance = None
     _cls = None
@@ -475,21 +488,36 @@ class _AutowireMechanism:
             log.debug(f"(_AutowireMechanism.apply {self._cls}, {self._instance_name})      Injecting the dependency "
                       f"{autowire_candidate.component_class} with name '{autowire_candidate.component_instance_name}' "
                       f"in the field '{autowire_candidate.attribute_name}'")
-            setattr(self._instance,
-                    autowire_candidate.attribute_name,
-                    Component.get(autowire_candidate.component_class,
-                                  autowire_candidate.component_instance_name))
+            self._autowire(autowire_candidate)
+
         if self.autowire_triplet_candidates:
             log.debug(f"(_AutowireMechanism.apply {self._cls}, {self._instance_name}) Dependency injection finished")
 
+    def _autowire(self, candidate: _AutowireCandidate):
+        if candidate.is_collection():
+            instance_names_to_inject = candidate.component_instance_name
+            if candidate.is_default():
+                element_dict_to_inject = Component.get_all(candidate.component_class, dirty_context=True)
+            else:
+                element_dict_to_inject = Component.get_all(candidate.component_class, names=instance_names_to_inject, dirty_context=True)
+
+            element_to_inject = element_dict_to_inject if candidate.is_dict_collection() else [v for _, v in element_dict_to_inject.items()]
+
+        else:
+            # this is a single instance to inject directly, not inside a collection
+            instance_name_to_inject = DEFAULT_INSTANCE_NAME if candidate.is_default() else candidate.component_instance_name[0]
+            element_to_inject = Component.get(candidate.component_class, instance_name_to_inject)
+
+        setattr(self._instance, candidate.attribute_name, element_to_inject)
+
     def _infer_autowire_candidates(self):
         annotations = self._instance.__annotations__
-        self._autowire_candidates = [_AutowireCandidateBis(attribute_name=k,
-                                                               component_class=self._base_component_class(v),
-                                                               autowire_type=self._get_injection_type(v))
-                                         for (k, v) in annotations.items()
-                                         if not hasattr(self._instance, k)
-                                         and (self._is_component(v) or self._is_collection_of_component(v))]
+        self._autowire_candidates = [_AutowireCandidate(attribute_name=k,
+                                                        component_class=self._base_component_class(v),
+                                                        autowire_type=self._get_injection_type(v))
+                                     for k, v in annotations.items()
+                                     if not hasattr(self._instance, k)
+                                     and (self._is_component(v) or self._is_collection_of_component(v))]
 
     @staticmethod
     def _is_component(clazz) -> bool:
@@ -617,16 +645,14 @@ class _AutowireMechanism:
 
         It does not return any value but store the result inside the _autowire_default_candidates attribute
         """
-        non_default = [i.attribute_name for i in self._autowire_non_default_candidates]
-        all_candidates = [i[0] for i in self._autowire_candidates]
-        default_candidates = set(all_candidates) - set(non_default)
-        all_candidates_as_dict = {i[0]: i[1] for i in self._autowire_candidates}
+        non_default_attribute_name = [i.attribute_name for i in self._autowire_non_default_candidates]
+        all_candidates_attribute_name = [i.attribute_name for i in self._autowire_candidates]
+        default_candidates = set(all_candidates_attribute_name) - set(non_default_attribute_name)
+
         self._autowire_default_candidates = [
-            _AutowireCandidate(attribute_name=i,
-                               component_instance_name=DEFAULT_INSTANCE_NAME,
-                               component_class=all_candidates_as_dict[i],
-                               autowire_type=_AutowireType.INSTANCE)
-            for i in default_candidates
+            candidate
+            for candidate in self._autowire_candidates
+            if candidate.attribute_name in default_candidates
         ]
 
 

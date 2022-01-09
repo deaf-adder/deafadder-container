@@ -164,7 +164,7 @@ def dummy12_default():
     yield _Dummy12()
 
 
-def test_default_autowire_for_non_set_annotated_component(dummy1_default, dummy2_default):
+def test_default_autowire_for_non_set_annotated_component(dummy1_default):
     dummy3 = _Dummy3()
 
     assert dummy3.get_three() == 3
