@@ -568,8 +568,6 @@ class _AutowireMechanism:
             elif hasattr(decorator_arg.value, "elts"):
                 for e in decorator_arg.value.elts:
                     elements.append(e.value)
-            else:
-                pass
             return elements
 
         def visit_function_def(node):
