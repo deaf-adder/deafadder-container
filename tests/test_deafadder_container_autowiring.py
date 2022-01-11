@@ -1,3 +1,6 @@
+from functools import wraps
+from typing import List, Dict
+
 import pytest
 
 from deafadder_container.ContainerException import AnnotatedDeclarationMissing, MultipleAutowireReference, InstanceNotFound
@@ -161,7 +164,7 @@ def dummy12_default():
     yield _Dummy12()
 
 
-def test_default_autowire_for_non_set_annotated_component(dummy1_default, dummy2_default):
+def test_default_autowire_for_non_set_annotated_component(dummy1_default):
     dummy3 = _Dummy3()
 
     assert dummy3.get_three() == 3
@@ -290,3 +293,42 @@ def test_autowiring_with_component_of_and_non_existing_named_instance():
 
     assert type(raised.value) is InstanceNotFound
     assert str(raised.value) == f"Unable to find an instance for {normal_class_as_component.__class__} with name 'non default'"
+
+
+def my_auto(**kwargs):
+    """
+    This decorator exist only to make sure the autowiring mechanism only take
+    into account the "autowire" one
+
+    :param kwargs:
+    :return:
+    """
+    def decorator_autowire(init):
+        @wraps(init)
+        def wrapper_decorator(*init_args, **init_kwargs):
+            instance = init(*init_args, **init_kwargs)
+            return instance
+        return wrapper_decorator
+    return decorator_autowire
+
+
+class ListAutowireClass(metaclass=Component):
+    l: List[_Dummy3]
+    d: Dict[str, _Dummy3]
+    nl: _Dummy3
+
+    @my_auto(l="", d="", nl="")
+    @my_auto(l="", d="", nl="")
+    @autowire(d=["non default 1", "default"], nl="non default 2")
+    def __init__(self):
+        pass
+
+
+def test_list_autowire(dummy3_default, dummy3_non_default_1, dummy3_non_default_2):
+    instance = ListAutowireClass()
+
+    assert len(instance.l) == 3
+    assert len(instance.d) == 2
+
+    assert "non default 1" in instance.d
+    assert "default" in instance.d

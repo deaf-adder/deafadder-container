@@ -381,9 +381,9 @@ def test_get_all_with_list_name_when_some_match(purge):
 
 
 def test_get_all_with_list_name_when_none_match(purge):
-    _1 = _FirstDummyClassForTest(instance_name="non default 1")
-    _2 = _FirstDummyClassForTest(instance_name="non default 2")
-    _3 = _FirstDummyClassForTest(instance_name="non default 3")
+    _1 = _FirstDummyClassForTest(instance_name="non default 1")  # noqa: F841
+    _2 = _FirstDummyClassForTest(instance_name="non default 2")  # noqa: F841
+    _3 = _FirstDummyClassForTest(instance_name="non default 3")  # noqa: F841
 
     instances = Component.get_all(_FirstDummyClassForTest, names=["Non default 1", "default 3"])
 
@@ -409,9 +409,9 @@ def test_get_all_with_pattern_name_when_some_match(purge):
 
 
 def test_get_all_with_pattern_name_when_none_match(purge):
-    _1 = _FirstDummyClassForTest(instance_name="non default 1")
-    _2 = _FirstDummyClassForTest(instance_name="non default 2")
-    _3 = _FirstDummyClassForTest(instance_name="non default 3")
+    _1 = _FirstDummyClassForTest(instance_name="non default 1")  # noqa: F841
+    _2 = _FirstDummyClassForTest(instance_name="non default 2")  # noqa: F841
+    _3 = _FirstDummyClassForTest(instance_name="non default 3")  # noqa: F841
 
     instances = Component.get_all(_FirstDummyClassForTest, pattern="Non DEFAULT [1-3]")
 
@@ -463,9 +463,9 @@ def test_get_all_with_name_and_pattern_when_some_match_with_overlap(purge):
 
 
 def test_get_all_with_name_and_pattern_when_none_match(purge):
-    _1 = _FirstDummyClassForTest(instance_name="non default 1")
-    _2 = _FirstDummyClassForTest(instance_name="non default 2")
-    _3 = _FirstDummyClassForTest(instance_name="non default 3")
+    _1 = _FirstDummyClassForTest(instance_name="non default 1")  # noqa: F841
+    _2 = _FirstDummyClassForTest(instance_name="non default 2")  # noqa: F841
+    _3 = _FirstDummyClassForTest(instance_name="non default 3")  # noqa: F841
 
     instances = Component.get_all(_FirstDummyClassForTest, pattern="Non DEFAULT [1-3]", names=["non default 4", "non default 5"])
 
@@ -495,8 +495,8 @@ def test_get_all_with_tags(purge):
 
 
 def test_delete_all_with_name_when_some_match(purge):
-    _1 = _FirstDummyClassForTest(instance_name="one")
-    _2 = _FirstDummyClassForTest(instance_name="two")
+    _1 = _FirstDummyClassForTest(instance_name="one")  # noqa: F841
+    _2 = _FirstDummyClassForTest(instance_name="two")  # noqa: F841
     instance_3 = _FirstDummyClassForTest(instance_name="three")
 
     Component.delete_all(_FirstDummyClassForTest, names=["one", "two"])
@@ -525,8 +525,8 @@ def test_delete_all_with_name_when_none_match(purge):
 
 
 def test_delete_all_with_pattern_when_some_match(purge):
-    _1 = _FirstDummyClassForTest(instance_name="default one")
-    _2 = _FirstDummyClassForTest(instance_name="default two")
+    _1 = _FirstDummyClassForTest(instance_name="default one")  # noqa: F841
+    _2 = _FirstDummyClassForTest(instance_name="default two")  # noqa: F841
     instance_3 = _FirstDummyClassForTest(instance_name="DEFAULT three")
 
     Component.delete_all(_FirstDummyClassForTest, pattern="default .*")
@@ -555,8 +555,8 @@ def test_delete_all_with_pattern_when_none_match(purge):
 
 
 def test_delete_all_with_tags_when_some_match(purge):
-    _1 = _FirstDummyClassForTest(instance_name="one", tags=["one", "two"])
-    _2 = _FirstDummyClassForTest(instance_name="two", tags=["two", "three"])
+    _1 = _FirstDummyClassForTest(instance_name="one", tags=["one", "two"])  # noqa: F841
+    _2 = _FirstDummyClassForTest(instance_name="two", tags=["two", "three"])  # noqa: F841
     instance_3 = _FirstDummyClassForTest(instance_name="three", tags=["three", "four"])
 
     Component.delete_all(_FirstDummyClassForTest, tags=["two"])
