@@ -21,7 +21,7 @@ uncertain, so use with caution.
 Documentation
 -------------
 
-Just follow this link: documentation
+Just follow this link: https://deaf-adder.github.io/deafadder-container/#/
 
 Fancy a more example base approach ? The documentation is full of examples and the tests files should be enough to have a better understanding of
 what can be achieved.
