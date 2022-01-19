@@ -78,6 +78,7 @@ class Orchestrator(metaclass=Component):
 
 ### Main
 and the main function:
+
 ```python
 # main.py
 
@@ -91,11 +92,11 @@ def _initialiaze():
     service2 = Service2()
     orchestrator = Orchestrator()
 
-    
+
 if __name__ == "__main__":
     _initialiaze()
-    
-    Orchestrator.get().handle_scenario()
+
+    Component.get(Orchestrator).handle_scenario()
 
 ```
 
@@ -150,6 +151,7 @@ class Orchestrator(metaclass=Component):
 
 ### Main
 and the main function:
+
 ```python
 # main.py
 
@@ -163,10 +165,105 @@ def _initialiaze():
     service2 = Service2(instance_name="other name")
     orchestrator = Orchestrator()
 
-    
+
 if __name__ == "__main__":
     _initialiaze()
+
+    Component.get(Orchestrator).handle_scenario()
+
+```
+
+## Injecting collection of component
+
+Autowiring also works for `list` and `dict` of `Component`. 
+
+### With default
+
+By using the example above, we have:
+
+```python
+# orchestrator.py
+
+from deafadder_container.MetaTemplate import Component
+
+from service.first import Service1
+from service.second import Service2
+
+
+class Orchestrator(metaclass=Component):
     
-    Orchestrator.get().handle_scenario()
+    service1: List[Service1]
+    service2: Service2
+    
+    def __init__(self):
+        pass
+    
+    def handle_scenario(self):
+        stuff = [service.do_stuff() for service in self.service1]
+        if "no" in stuff:
+            self.service2.print_second()
+        else:
+            self.service2.print_first()
+
+```
+
+This snippet describe how to inject all instance of the *Service1* `Component`. 
+With `dict`, we would have this kind of code:
+
+```python
+# orchestrator.py
+
+from deafadder_container.MetaTemplate import Component
+
+from service.first import Service1
+from service.second import Service2
+
+
+class Orchestrator(metaclass=Component):
+    
+    service1: Dict[str, Service1]
+    service2: Service2
+    
+    def __init__(self):
+        pass
+    
+    def handle_scenario(self):
+        stuff = [instance.do_stuff() for name, instance in self.service1.items()]
+        if "no" in stuff:
+            self.service2.print_second()
+        else:
+            self.service2.print_first()
+
+```
+
+For `dict` the **key** is the name of the instance and the **value** is the actual instance. There is
+not much difference of usage between `dict` and `list` except the way they can accessed. If you don't care 
+of the order you access them or don't want one specific instance, than the `list` is enough. If you need to
+access on specific instance, then you should consider the `dict`.
+
+### With non default explicit autowire
+
+When dealing with explicit `autowire` for collection, instead of providing a single name as a `str`, user
+should provide a `list` of `str` where each `str` is the name of the instance you want to inject.
+
+```python
+# orchestrator.py
+
+from deafadder_container.MetaTemplate import Component
+from deafadder_container.Wiring import autowire
+
+from service.first import Service1
+from service.second import Service2
+
+
+class Orchestrator(metaclass=Component):
+    
+    service1: List[Service1]
+    service2: Dict[str, Service2]
+    
+    @autowire(service1=["name1", "name2"], service2=["default"])
+    def __init__(self):
+        pass
+    
 
 ```

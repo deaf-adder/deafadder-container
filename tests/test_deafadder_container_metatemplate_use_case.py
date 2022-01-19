@@ -8,16 +8,20 @@ from .deafadder_container_metatemplate_test_helper import _FirstDummyClassForTes
     _CompositeDummyClass2ForTest, _CompositeDummyClass3ForTest
 
 
+@pytest.fixture(autouse=True)
+def purge():
+    yield
+    Component.purge()
+
+
 @pytest.fixture
 def first_dummy_component():
     yield _FirstDummyClassForTest()
-    Component.delete(_FirstDummyClassForTest)
 
 
 @pytest.fixture
 def first_dummy_component_non_default():
     yield _FirstDummyClassForTest(instance_name="non default")
-    Component.delete(_FirstDummyClassForTest, instance_name="non default")
 
 
 def test_simple_composition(first_dummy_component):
@@ -29,9 +33,6 @@ def test_simple_composition(first_dummy_component):
 
     first_dummy_component.increment()
     assert service.get_counter_value() == 2
-
-    # Clean up
-    Component.delete(_CompositeDummyClassForTest)
 
 
 def test_simple_composition_fails_with_prototype_reference():
@@ -57,10 +58,6 @@ def test_intricate_composition(first_dummy_component):
     first_dummy_component.increment()
     assert service.get_counter_value() == 3
 
-    # Clean up
-    Component.delete(_CompositeDummyClassForTest)
-    Component.delete(_CompositeDummyClass2ForTest)
-
 
 def test_logging(caplog):
     Component.purge()
@@ -85,8 +82,6 @@ def test_logging(caplog):
         for record, expected in zip(caplog.records, expected_message):
             assert record.message == expected
 
-    Component.delete_all(_FirstDummyClassForTest)
-
 
 def test_post_init(first_dummy_component):
     instance = _CompositeDummyClass3ForTest()
@@ -97,5 +92,3 @@ def test_post_init(first_dummy_component):
 
     assert instance.counter == 1
     assert first_dummy_component.counter == 2
-
-    Component.delete_all(_CompositeDummyClass3ForTest)

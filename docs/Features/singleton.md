@@ -23,28 +23,22 @@ class MyComponent(metaclass=Component):
 
 if __name__ == "__main__":
     instance = MyComponent()
-    
+
     # attempt to recreate it will return the existing instance
     instance_bis = MyComponent()
     assert instance is instance_bis
-    
+
     # retrieving the instance will return the initial one
-    instance_ter = MyComponent.get()
+    instance_ter = Component.get(MyComponent)
     assert instance is instance_ter
-    
-    instance_ter_bis = Component.get(MyComponent)
-    assert instance is instance_ter_bis
-    
+
     # creating an instance with the default name will return the initial one
     instance_quad = MyComponent(instance_name="default")
     assert instance is instance_quad
-    
+
     # retrieving the instance with the name default will return the initial one
-    instance_quint = MyComponent.get(instance_name="default")
+    instance_quint = Component.get(MyComponent, instance_name="default")
     assert instance is instance_quint
-    
-    instance_quint_bis = Component.get(MyComponent, instance_name="default")
-    assert instance is instance_quint_bis
 
 ```
 
@@ -61,14 +55,13 @@ class MyComponent(metaclass=Component):
 if __name__ == "__main__":
     instance = MyComponent()
     named = MyComponent(instance_name="name")
-    
+
     assert named is not instance
-    
+
     # retrieving the named instance
-    named_bis = MyComponent.get(instance_name="name")
+    named_bis = Component.get(MyComponent, instance_name="name")
     assert named is named_bis
-    assert named is Component.get(MyComponent, instance_name="name")
-    
+
     # creating an instance with the same name
     named_ter = MyComponent(instance_name="name")
     assert named is named_ter

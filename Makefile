@@ -12,6 +12,8 @@ coverage:
 	poetry run coverage run -m pytest
 	poetry run coverage report -m
 
+generate-requirements:
+	poetry export -f requirements.txt > requirements.txt
 
 check-version:
 	bash ./build-scripts/check_version.sh
